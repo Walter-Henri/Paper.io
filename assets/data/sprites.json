@@ -1,0 +1,212 @@
+{
+  "_comment": "Configuração externa de sprites do TerritórIO — Edição Brasil.",
+  "_instrucoes": "Para adicionar um sprite: (1) coloque o PNG na pasta correta, (2) adicione uma entrada aqui, (3) use a chave no código via sprite_manager.get('sua.chave'). Nenhum outro arquivo precisa ser modificado.",
+
+  "player.default": {
+    "descricao": "Sprite padrão do jogador (fallback procedural se ausente)",
+    "path": "assets/sprites/players/player_default.png",
+    "scale": 1.0,
+    "width": null,
+    "height": null,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "player"
+  },
+
+  "player.shield": {
+    "descricao": "Anel de escudo ao redor do jogador protegido",
+    "path": null,
+    "scale": 1.0,
+    "width": null,
+    "height": null,
+    "opacity": 200,
+    "frames": 1,
+    "fps": 0,
+    "loop": true,
+    "categoria": "player"
+  },
+
+  "bot.default": {
+    "descricao": "Sprite padrão dos bots adversários (fallback procedural se ausente)",
+    "path": "assets/sprites/bots/bot_default.png",
+    "scale": 1.0,
+    "width": null,
+    "height": null,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "bot"
+  },
+
+  "powerup.size_up": {
+    "descricao": "Ícone do power-up Expansão (dobra tamanho)",
+    "path": "assets/sprites/powerups/size_up.png",
+    "scale": 1.0,
+    "width": 32,
+    "height": 32,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "powerup"
+  },
+
+  "powerup.speed": {
+    "descricao": "Ícone do power-up Turbo (dobra velocidade)",
+    "path": "assets/sprites/powerups/speed.png",
+    "scale": 1.0,
+    "width": 32,
+    "height": 32,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "powerup"
+  },
+
+  "powerup.bomb": {
+    "descricao": "Ícone do power-up Bomba de Tinta (explosão circular)",
+    "path": "assets/sprites/powerups/bomb.png",
+    "scale": 1.0,
+    "width": 32,
+    "height": 32,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "powerup"
+  },
+
+  "powerup.shield": {
+    "descricao": "Ícone do power-up Escudo (imunidade temporária)",
+    "path": "assets/sprites/powerups/shield.png",
+    "scale": 1.0,
+    "width": 32,
+    "height": 32,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "powerup"
+  },
+
+  "powerup.eagle": {
+    "descricao": "Ícone do power-up Visão de Águia (zoom out temporário)",
+    "path": "assets/sprites/powerups/eagle.png",
+    "scale": 1.0,
+    "width": 32,
+    "height": 32,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "powerup"
+  },
+
+  "effect.explosion": {
+    "descricao": "Efeito visual da explosão da Bomba de Tinta",
+    "path": null,
+    "scale": 1.0,
+    "width": null,
+    "height": null,
+    "opacity": 220,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "effect"
+  },
+
+  "ui.predator_badge": {
+    "descricao": "Badge do modo Predador (texto renderizado proceduralmente)",
+    "path": null,
+    "scale": 1.0,
+    "width": null,
+    "height": null,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "ui"
+  },
+
+  "ui.btn_blue": {
+    "descricao": "Botão azul da interface (Kenney UI Pack CC0)",
+    "path": "assets/sprites/ui_kenney/blue/button_rectangle_depth_gradient.png",
+    "scale": 1.0,
+    "width": null,
+    "height": null,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "ui"
+  },
+
+  "ui.btn_green": {
+    "descricao": "Botão verde da interface (Kenney UI Pack CC0)",
+    "path": "assets/sprites/ui_kenney/green/button_rectangle_depth_gradient.png",
+    "scale": 1.0,
+    "width": null,
+    "height": null,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "ui"
+  },
+
+  "ui.btn_red": {
+    "descricao": "Botão vermelho da interface (Kenney UI Pack CC0)",
+    "path": "assets/sprites/ui_kenney/red/button_rectangle_depth_gradient.png",
+    "scale": 1.0,
+    "width": null,
+    "height": null,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "ui"
+  },
+
+  "ui.btn_yellow": {
+    "descricao": "Botão amarelo da interface (Kenney UI Pack CC0)",
+    "path": "assets/sprites/ui_kenney/yellow/button_rectangle_depth_gradient.png",
+    "scale": 1.0,
+    "width": null,
+    "height": null,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "ui"
+  },
+
+  "ui.star": {
+    "descricao": "Ícone de estrela para ranking (Kenney UI Pack CC0)",
+    "path": "assets/sprites/ui_kenney/star.png",
+    "scale": 1.0,
+    "width": 32,
+    "height": 32,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "ui"
+  },
+
+  "bg.menu": {
+    "descricao": "Fundo do menu principal (gerado proceduralmente se ausente)",
+    "path": null,
+    "scale": 1.0,
+    "width": null,
+    "height": null,
+    "opacity": 255,
+    "frames": 1,
+    "fps": 0,
+    "loop": false,
+    "categoria": "background"
+  }
+}
