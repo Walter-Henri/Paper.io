@@ -1,5 +1,14 @@
-# Paper.io 2 — Edição Brasil
-## Documentação Completa do Projeto
+# TerritórIO — Edição Brasil
+## Documentação Técnica Completa do Projeto
+
+**Versão:** `1.3.1` &nbsp;|&nbsp; [Histórico de versões e correções →](CHANGELOG.md)
+
+---
+
+---
+
+> **Nota de versão:** esta documentação reflete o estado do código na versão `1.3.1`.  
+> Consulte o [CHANGELOG.md](CHANGELOG.md) para o histórico detalhado de todas as alterações.
 
 ---
 
@@ -24,7 +33,7 @@
 
 ## 1. Visão Geral
 
-**Paper.io 2 — Edição Brasil** é um jogo de captura de território inspirado em Paper.io 2, desenvolvido em Python com Pygame. O jogador controla um personagem que traça trilhas no mapa e fecha loops para conquistar área. O objetivo é dominar o maior território possível eliminando oponentes e sobrevivendo.
+**TerritórIO — Edição Brasil** é um jogo de captura de território inspirado em Paper.io 2, desenvolvido em Python com Pygame. O jogador controla um personagem que traça trilhas no mapa e fecha loops para conquistar área. O objetivo é dominar o maior território possível eliminando oponentes e sobrevivendo.
 
 ### Destaques
 - 27 mapas únicos baseados nos estados brasileiros reais
@@ -57,12 +66,12 @@ python main.py
 
 ### Estrutura de diretórios
 ```
-paperio2/
+territorIO/
 ├── main.py                        ← Ponto de entrada
 ├── ARCHITECTURE.md                ← Documentação de arquitetura
 ├── DOCUMENTACAO.md                ← Esta documentação
 ├── requirements.txt
-├── paperio_save.json              ← Criado automaticamente ao jogar
+├── territorio_save.json              ← Criado automaticamente ao jogar
 │
 ├── assets/
 │   ├── fonts/                     ← Kenney Future (.ttf) — CC0
@@ -495,7 +504,7 @@ def draw(self, surface, offset):
 ## 12. Progressão e Salvamento
 
 ### Salvamento automático
-O arquivo `paperio_save.json` é criado/atualizado automaticamente ao:
+O arquivo `territorio_save.json` é criado/atualizado automaticamente ao:
 - Vencer uma partida
 - Ser eliminado
 
@@ -623,5 +632,5 @@ MAX_ITEMS = 6          # itens simultâneos no mapa
 
 ---
 
-*Documentação gerada para Paper.io 2 — Edição Brasil v2.0*  
+*Documentação gerada para TerritórIO — Edição Brasil v1.3.1*  
 *Assets Kenney.nl licenciados sob CC0 (Creative Commons Zero)*

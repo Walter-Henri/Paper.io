@@ -1,7 +1,9 @@
 # TerritórIO — Edição Brasil 🇧🇷
 
-> **Conquiste. Expanda. Domine.**
+> **Conquiste. Expanda. Domine.**  
 > Um jogo arcade de captura de território inspirado em Paper.io, desenvolvido em Python com Pygame.
+
+**Versão atual:** `1.3.1` &nbsp;|&nbsp; [Ver histórico completo de versões →](CHANGELOG.md)
 
 ---
 
@@ -461,7 +463,7 @@ python -m pytest tests/ -v
 python tests/run_tests.py
 ```
 
-### Resultado dos testes (última execução)
+### Resultado dos testes (v1.3.1)
 
 | Suite | Testes | Resultado |
 |---|---|---|
@@ -470,11 +472,11 @@ python tests/run_tests.py
 | `test_difficulty.py` | 10 | ✅ Todos passando |
 | `test_collision.py` | 8 | ✅ Todos passando (requer pytest) |
 | `test_sprite_manager.py` | 12 | ✅ Todos passando (requer pytest) |
-| **collision._point_to_segment_dist** | 4 | ✅ Todos passando |
-| **brazil_maps** | 6 | ✅ Todos passando |
-| **game_config** | 7 | ✅ Todos passando |
-| **sprites.json** | 4 | ✅ Todos passando |
-| **Total** | **70** | ✅ **0 falhas** |
+| `run_tests.py` (sem pytest) | 53 | ✅ Todos passando |
+| **Total** | **53** | ✅ **0 falhas** |
+
+> Os 53 testes do `run_tests.py` cobrem todos os módulos sem dependência de display Pygame.
+> Para executar os testes das suites individuais com relatório detalhado: `pip install pytest && python -m pytest tests/ -v`
 
 ---
 

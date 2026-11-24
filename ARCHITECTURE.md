@@ -1,57 +1,84 @@
-# ARCHITECTURE.md — Paper.io 2: Edição Brasil
+# ARCHITECTURE.md — TerritórIO: Edição Brasil
 
-Documentação da arquitetura modular refatorada.
+Documentação da arquitetura modular do projeto.  
+**Versão:** `1.3.1` &nbsp;|&nbsp; [Histórico de alterações →](CHANGELOG.md)
 
 ---
 
 ## Estrutura de diretórios
 
 ```
-paperio2/
-├── main.py                        Loop principal e máquina de estados
-├── ARCHITECTURE.md                Este documento
-├── requirements.txt               Dependências Python
+territorIO/
+├── main.py                        ← Ponto de entrada; loop principal; máquina de estados
+├── iniciar.sh                     ← Instalação e inicialização automática (Ubuntu/Linux)
+├── requirements.txt               ← Dependências Python
+├── territorio_save.json           ← Criado automaticamente ao jogar
+│
+├── README.md                      ← Apresentação do projeto
+├── ARCHITECTURE.md                ← Este documento
+├── DOCUMENTACAO.md                ← Documentação técnica completa em português
+├── CHANGELOG.md                   ← Histórico de versões e correções de bugs
 │
 ├── assets/
-│   ├── fonts/                     Kenney Future (.ttf) — CC0
-│   ├── audio/                     SFX Kenney (.ogg) — CC0
-│   ├── animations/                Futuras sequências de animação
-│   ├── KENNEY_LICENSE.txt
+│   ├── data/
+│   │   └── sprites.json           ← Configuração externa de sprites (JSON) ⭐
+│   ├── fonts/
+│   │   ├── Kenney Future.ttf      ← Fonte principal (CC0)
+│   │   └── Kenney Future Narrow.ttf
+│   ├── audio/
+│   │   └── *.ogg                  ← SFX Kenney (CC0)
+│   ├── animations/                ← Spritesheets de animação (futuro)
 │   └── sprites/
-│       ├── player/                Sprites do jogador (PNG)
-│       ├── bots/                  Sprites dos bots (PNG)
-│       ├── powerups/              Ícones dos 5 power-ups (PNG)
-│       ├── effects/               Efeitos visuais (PNG/spritesheet)
-│       ├── backgrounds/           Fundos (PNG)
-│       └── ui_kenney/             Botões e ícones Kenney (CC0)
+│       ├── players/               ← Sprites do jogador (PNG opcional)
+│       ├── bots/                  ← Sprites dos bots (PNG opcional)
+│       ├── powerups/              ← 5 ícones PNG gerados por código ⭐
+│       │   ├── size_up.png
+│       │   ├── speed.png
+│       │   ├── bomb.png
+│       │   ├── shield.png
+│       │   └── eagle.png
+│       ├── effects/               ← Efeitos visuais (PNG opcional)
+│       ├── backgrounds/           ← Fundos (PNG opcional)
+│       └── ui_kenney/             ← Botões e ícones Kenney (CC0)
 │
-└── src/
-    ├── config/
-    │   ├── game_config.py         Todas as constantes do jogo
-    │   └── sprite_config.py       Configurações visuais de cada sprite
-    │
-    ├── core/
-    │   ├── game.py                Núcleo da partida (GameSession)
-    │   └── brazil_maps.py         Polígonos dos 27 estados brasileiros
-    │
-    ├── entities/
-    │   ├── trail.py               Trilha deixada pelas entidades
-    │   ├── world.py               Grade de território (ownership grid)
-    │   ├── player.py              Entity base + Player (controlado)
-    │   └── bot.py                 Bot com IA de 4 estados
-    │
-    ├── systems/
-    │   ├── assets.py              Carregamento de fontes
-    │   ├── audio.py               Carregamento e reprodução de SFX
-    │   ├── camera.py              Câmera suave + zoom Eagle Eye
-    │   ├── particles.py           Sistema de partículas visuais
-    │   ├── collision.py           Detecção de colisões trilha→cabeça
-    │   ├── powerups.py            Ciclo de vida dos power-ups
-    │   └── sprite_manager.py      Carregamento e cache de sprites (CENTRAL)
-    │
-    └── ui/
-        ├── hud.py                 HUD, ranking, minimapa, badge Predador
-        └── menus.py               Menu, skin select, pausa, game over, vitória
+├── src/
+│   ├── config/
+│   │   ├── game_config.py         ← Todas as constantes do jogo
+│   │   ├── sprite_config.py       ← Configuração Python de fallback dos sprites
+│   │   └── difficulty.py          ← Perfis de dificuldade dos bots ⭐
+│   │
+│   ├── core/
+│   │   ├── game.py                ← Núcleo da partida (GameSession)
+│   │   ├── brazil_maps.py         ← Polígonos dos 27 estados brasileiros
+│   │   └── log_setup.py           ← Configuração centralizada de logging ⭐
+│   │
+│   ├── entities/
+│   │   ├── trail.py               ← Trilha das entidades
+│   │   ├── world.py               ← Grade de território (ownership grid)
+│   │   ├── player.py              ← Entity base + Player controlado
+│   │   └── bot.py                 ← IA com FSM de 6 estados ⭐
+│   │
+│   ├── systems/
+│   │   ├── assets.py              ← Carregamento de fontes
+│   │   ├── audio.py               ← SFX (arquivo + procedural via numpy)
+│   │   ├── camera.py              ← Câmera suave + zoom Eagle Eye
+│   │   ├── particles.py           ← Sistema de partículas visuais
+│   │   ├── collision.py           ← Detecção de colisões trilha→cabeça
+│   │   ├── powerups.py            ← Ciclo de vida dos power-ups
+│   │   └── sprite_manager.py      ← Gerenciador centralizado de sprites ⭐
+│   │
+│   └── ui/
+│       ├── hud.py                 ← HUD, ranking, minimapa, badge Predador
+│       └── menus.py               ← 5 telas de interface
+│
+└── tests/
+    ├── __init__.py
+    ├── run_tests.py               ← Runner sem dependência de pytest (53 testes)
+    ├── test_world.py              ← 11 testes para World
+    ├── test_trail.py              ←  8 testes para Trail
+    ├── test_difficulty.py         ← 10 testes para DifficultyProfile
+    ├── test_collision.py          ←  8 testes para collision (requer pytest)
+    └── test_sprite_manager.py     ← 12 testes para SpriteManager (requer pytest)
 ```
 
 ---
@@ -60,54 +87,77 @@ paperio2/
 
 | Módulo | Responsabilidade |
 |---|---|
-| `main.py` | Inicialização, loop, máquina de estados, integração de sistemas |
-| `config/game_config.py` | Todas as constantes (velocidade, tamanho, cores, skins) |
-| `config/sprite_config.py` | Caminhos, escala, opacidade e animações de cada sprite |
-| `core/game.py` | Partida: update, draw, colisões, power-ups, fim de jogo |
-| `core/brazil_maps.py` | Polígonos geográficos dos 27 estados + projeção para pixels |
-| `entities/trail.py` | Armazenamento de pontos da trilha + verificação de loop |
-| `entities/world.py` | Grade de ownership, claim, contagem e flood fill |
-| `entities/player.py` | Entity base, Player controlado, movimentação, renderização |
-| `entities/bot.py` | IA com estados expand/return/hunt/evade, renderização |
-| `systems/assets.py` | Carregamento de fontes Kenney com fallback para SysFont |
-| `systems/audio.py` | SFX de arquivo (Kenney) + SFX procedurais (numpy) |
-| `systems/camera.py` | Seguimento suave + offset de câmera |
+| `main.py` | Inicialização, loop 60 FPS, máquina de estados, integração de sistemas, encerramento seguro |
+| `config/game_config.py` | Todas as constantes: resolução, velocidades, cores, skins, dimensões do mundo |
+| `config/sprite_config.py` | Configuração Python de fallback dos sprites (usado quando JSON não carrega) |
+| `config/difficulty.py` | Três perfis de dificuldade imutáveis (`facil`, `medio`, `dificil`) |
+| `core/game.py` | Partida completa: update, draw, colisões, power-ups, fim de jogo |
+| `core/brazil_maps.py` | Polígonos geográficos dos 27 estados + projeção lon/lat → pixels |
+| `core/log_setup.py` | Configuração do módulo nativo `logging` (ativado com `--debug`) |
+| `entities/trail.py` | Armazenamento de pontos da trilha, distância mínima, is_near_start |
+| `entities/world.py` | Grade de ownership, claim_polygon, contagem, seed, clear |
+| `entities/player.py` | Classe `Entity` base (com `radius` como `@property`) + `Player` controlado |
+| `entities/bot.py` | IA com FSM de 6 estados e integração com `DifficultyProfile` |
+| `systems/assets.py` | Fontes Kenney com fallback para SysFont |
+| `systems/audio.py` | SFX de arquivo (.ogg) + SFX procedurais sintetizados via NumPy |
+| `systems/camera.py` | Seguimento suave (lerp) + offset de câmera |
 | `systems/particles.py` | Partículas de burst, trilha capturada e morte |
-| `systems/collision.py` | Detecção ponto-segmento, proteção de autocolisão e escudo |
-| `systems/powerups.py` | Spawn, coleta, efeitos ativos, bomba, renderização |
-| `systems/sprite_manager.py` | Cache de sprites, escala, fallback, animações |
-| `ui/hud.py` | Barra superior, ranking, minimapa, badge, notificações |
-| `ui/menus.py` | 5 telas de UI: menu, skin, pausa, game over, vitória |
+| `systems/collision.py` | Detecção ponto-segmento, autocolisão removida do jogador, proteção do escudo |
+| `systems/powerups.py` | Spawn, coleta (jogador e bots), efeitos ativos, bomba, renderização |
+| `systems/sprite_manager.py` | Carregamento via JSON externo, cache, fallback, escalonamento, animações |
+| `ui/hud.py` | Barra superior, ranking em tempo real, painel de power-ups, Predador, notificações |
+| `ui/menus.py` | Menu principal, skin select, pausa, game over, vitória |
 
 ---
 
 ## Fluxo de execução
 
 ```
-main.py
+python main.py [--debug]
 │
-├── pygame.init()
-├── Assets(), AudioManager(), SpriteManager.preload()
+├── configure_logging(debug)          ← log_setup.py
+├── pygame.init() + mixer.init()
+├── Assets(), AudioManager()
+├── sprite_manager.preload([...])     ← carrega JSON + sprites em cache
 ├── MainMenu, SkinSelect, GameOverScreen, HUD
 │
-└── LOOP PRINCIPAL (60 FPS)
+└── LOOP PRINCIPAL — clock.tick_busy_loop(60)
     │
-    ├── STATE = menu       → MainMenu.handle_event / draw
-    ├── STATE = select     → SkinSelect.handle_event / draw
+    ├── dt = raw_dt clampeado a MAX_DT
     │
-    ├── STATE = playing
-    │   ├── GameSession.update(dt, keys)
-    │   │   ├── Player.handle_input + speed *= pu_manager.speed_multiplier
-    │   │   ├── Entity.update_position (todos)
-    │   │   ├── Entity.update_trail_and_claim → World.claim_polygon
-    │   │   ├── check_collisions → (killer, victim) pairs
-    │   │   ├── PowerUpManager.update → coleta, efeitos, bomba
-    │   │   ├── Entity.score_percent = World.ownership_percent
-    │   │   ├── ParticleSystem.update
-    │   │   └── Camera.follow
-    │   └── GameSession.draw + HUD.draw
+    ├── EVENTOS pygame.event.get()
+    │   ├── QUIT → _write_save() → _quit() → sys.exit(0)
+    │   ├── K_F4 + KMOD_ALT → mesmo caminho acima
+    │   ├── K_m → audio.toggle()
+    │   └── eventos por estado (menu/select/playing/gameover)
     │
-    └── STATE = gameover   → GameOverScreen.handle_event / draw
+    ├── UPDATE por estado
+    │   ├── menu      → MainMenu.update(dt)
+    │   ├── select    → (passivo)
+    │   ├── playing   → GameSession.update(dt, keys)
+    │   │               ├── Player.handle_input + speed *= pu_manager.speed_multiplier
+    │   │               ├── Bot.update_ai(dt, world, entities, powerup_items)
+    │   │               │   └── FSM: evade → return → collect_pu → intercept → hunt → expand
+    │   │               ├── Entity.update_position (todos)
+    │   │               ├── Entity.update_trail_and_claim → World.claim_polygon
+    │   │               ├── collision.check_collisions(entities, player, shield)
+    │   │               ├── PowerUpManager.update(dt, ..., bots, bot_bomb_callback)
+    │   │               │   ├── coleta pelo jogador → _apply()
+    │   │               │   └── coleta por bots → _apply_to_bot()
+    │   │               ├── PowerUpManager.update_bot_effects(dt, bots)
+    │   │               ├── Entity.score_percent = World.ownership_percent
+    │   │               ├── ParticleSystem.update(dt)
+    │   │               └── Camera.follow(player.x, player.y, lerp)
+    │   └── gameover  → (passivo)
+    │
+    ├── DRAW por estado
+    │   ├── menu      → MainMenu.draw(screen)
+    │   ├── select    → SkinSelect.draw(screen)
+    │   ├── playing   → GameSession.draw(screen, assets, paused)
+    │   │               └── HUD.draw(screen, session, paused)
+    │   └── gameover  → GameOverScreen.draw(screen)
+    │
+    └── pygame.display.flip()
 ```
 
 ---
@@ -116,168 +166,209 @@ main.py
 
 ```
 main.py
-  ↓ cria
-GameSession ──uses──► World, Camera, ParticleSystem, PowerUpManager
-  ↓ contém
-[Player, Bot, ...] ──uses──► Trail, sprite_manager
-  ↓ colisões via
-collision.check_collisions(entities, player, shield)
-  ↓ renderização via
-GameSession.draw → Entity.draw(surface, offset) → sprite_manager.get(key)
-  ↓ HUD via
-HUD.draw(surface, session)
-  ↓ power-ups via
-PowerUpManager.draw_world + draw_hud
+  │ cria
+  ├─► Assets, AudioManager, sprite_manager (global)
+  ├─► MainMenu, SkinSelect, GameOverScreen, HUD
+  └─► GameSession(skin, level)
+        │ contém
+        ├─► World
+        ├─► Camera
+        ├─► ParticleSystem
+        ├─► PowerUpManager(world_w, world_h)
+        ├─► Player(x, y, skin)  ──────────────► Trail, sprite_manager
+        └─► [Bot(x, y, skin, difficulty_profile)]
+              │                                  Trail, sprite_manager
+              └─► DifficultyProfile (somente leitura)
+
+GameSession.update()
+  ├─► Bot.update_ai(dt, world, entities, powerup_items)
+  ├─► Entity.update_position(dt)
+  ├─► Entity.update_trail_and_claim(world) ──► World.claim_polygon
+  ├─► collision.check_collisions(entities, player, shield_active)
+  ├─► PowerUpManager.update(..., bots, bot_bomb_callback)
+  └─► PowerUpManager.update_bot_effects(dt, bots)
+
+GameSession.draw()
+  ├─► Entity.draw(surface, camera_offset) ──► sprite_manager.get(key)
+  ├─► PowerUpManager.draw_world(surface, ox, oy)
+  └─► HUD.draw(surface, session, paused)
+        ├─► PowerUpManager.draw_hud(...)
+        ├─► _draw_predator_badge()
+        └─► _draw_minimap(session)
+```
+
+---
+
+## Hierarquia de classes das entidades
+
+```
+Entity  (src/entities/player.py)
+│   ├── id, x, y, color, speed, direction
+│   ├── trail: Trail
+│   ├── alive, outside, drawing, kills, score_percent
+│   ├── @property radius → PLAYER_RADIUS   ← adicionado em v1.3.1
+│   ├── set_direction(dx, dy)              ← sem reversão de 180°
+│   ├── update_position(dt)
+│   ├── update_trail_and_claim(world)
+│   ├── kill()
+│   └── draw(surface, camera_offset)
+│
+├── Player(Entity)  (src/entities/player.py)
+│   ├── skin_id, skin_name
+│   └── handle_input(keys)
+│
+└── Bot(Entity)  (src/entities/bot.py)
+    ├── _profile: DifficultyProfile
+    ├── difficulty: float
+    ├── state: str  ("expand"|"return"|"collect_pu"|"intercept"|"hunt"|"evade")
+    ├── bot_effects: dict
+    ├── update_ai(dt, world, entities, powerup_items)
+    ├── _do_expand / _do_return / _do_evade
+    ├── _best_powerup(items, entities) → utilidade
+    ├── _find_hunt_target / _find_intercept
+    ├── _assess_danger / _threat_direction
+    ├── _steer_to / _strategic_turn / _best_direction_toward_own
+    ├── _force_unstick
+    └── draw(surface, camera_offset)
 ```
 
 ---
 
 ## Sistema de Sprites
 
-### Como funciona
+### Pipeline de carregamento
 
-1. `sprite_config.py` define a chave e o caminho de cada sprite
-2. `sprite_manager.get("chave")` carrega, processa e armazena em cache
-3. Entidades chamam `sprite_manager.get("player.default")` ao renderizar
-4. Se o arquivo não existir, o manager retorna um surface de fallback cinza
-5. O jogo nunca trava por sprite ausente
-
-### Como adicionar um novo sprite
-
-**Passo 1** — Coloque o arquivo em `assets/sprites/<categoria>/meu_sprite.png`
-
-**Passo 2** — Registre em `src/config/sprite_config.py`:
-```python
-"player.skin_nova": {
-    "path":    "assets/sprites/player/nova_skin.png",
-    "scale":   1.0,
-    "width":   None,
-    "height":  None,
-    "opacity": 255,
-    "frames":  1,
-    "fps":     0,
-    "loop":    False,
-},
+```
+assets/data/sprites.json          ← fonte primária (JSON externo)
+         │  falha/ausente
+         ▼
+src/config/sprite_config.py       ← fonte secundária (Python fallback)
+         │
+         ▼
+SpriteManager._load_surface(path, cfg)
+         │  arquivo não encontrado ou corrompido
+         ▼
+SpriteManager._get_fallback()     ← círculo cinza 28×28 px (nunca trava o jogo)
+         │
+         ▼
+SpriteManager._cache[key]         ← armazenado; reutilizado em chamadas seguintes
 ```
 
-**Passo 3** — Use em qualquer lugar do código:
+### Como adicionar um sprite (3 passos)
+
+**1.** Coloque o PNG em `assets/sprites/<categoria>/meu_sprite.png`
+
+**2.** Registre em `assets/data/sprites.json`:
+```json
+"player.skin_nova": {
+    "descricao": "Minha skin personalizada",
+    "path":      "assets/sprites/players/meu_sprite.png",
+    "scale":     1.0,
+    "width":     null,
+    "height":    null,
+    "opacity":   255,
+    "frames":    1,
+    "fps":       0,
+    "loop":      false,
+    "categoria": "player"
+}
+```
+
+**3.** Use em qualquer módulo:
 ```python
 from src.systems.sprite_manager import sprite_manager
-sprite = sprite_manager.get("player.skin_nova")
-surface.blit(sprite, (x, y))
+surf = sprite_manager.get("player.skin_nova")
+surface.blit(surf, (x, y))
 ```
 
-Nenhum outro arquivo precisa ser modificado.
+Nenhum outro arquivo precisa ser alterado.
 
-### Como substituir um sprite existente
+### Métodos públicos do SpriteManager
 
-Edite apenas o campo `"path"` em `sprite_config.py`. O cache é invalidado ao reiniciar.
-
-Para forçar recarga em runtime (sem reiniciar):
-```python
-sprite_manager.invalidate("player.default")
-```
-
-### Como configurar dimensões e escala
-
-```python
-"meu_sprite": {
-    "path":    "assets/sprites/player/sprite.png",
-    "scale":   1.5,       # aplica escala uniforme
-    "width":   48,        # força largura específica (anula scale.x)
-    "height":  48,        # força altura específica (anula scale.y)
-    "opacity": 200,       # 0 = transparente, 255 = opaco
-}
-```
-
-### Como adicionar uma animação (spritesheet)
-
-**Passo 1** — Crie um spritesheet horizontal: `sprite_N.png` onde N quadros ficam lado a lado.
-
-**Passo 2** — Registre em `sprite_config.py`:
-```python
-"player.run": {
-    "path":   "assets/sprites/player/run_sheet.png",
-    "frames": 6,
-    "fps":    12,
-    "loop":   True,
-    ...
-}
-```
-
-**Passo 3** — Registre em `ANIMATION_CONFIG` em `sprite_config.py`:
-```python
-"player.run": {
-    "sprite_key": "player.run",
-    "frames": 6,
-    "fps": 12,
-    "loop": True,
-}
-```
-
-**Passo 4** — Use em uma entidade:
-```python
-self._run_anim = sprite_manager.get_animation("player.run")
-
-def update(self, dt):
-    self._run_anim.update(dt)
-
-def draw(self, surface, offset):
-    surface.blit(self._run_anim.current, (sx, sy))
-```
-
----
-
-## Dependências entre sistemas
-
-```
-game_config   ← importado por todos os módulos (sem dependências)
-sprite_config ← importado apenas por sprite_manager
-sprite_manager← importado por player, bot, powerups
-assets        ← importado por hud, menus, main
-audio         ← importado por main
-trail         ← importado por player (entity base)
-world         ← importado por player, bot, game
-player        ← importado por bot (herda Entity), game, collision
-bot           ← importado por game
-collision     ← importado por game
-camera        ← importado por game
-particles     ← importado por game
-powerups      ← importado por game
-brazil_maps   ← importado por game
-hud           ← importado por main
-menus         ← importado por main
-```
-
-Não há dependências circulares.
-
----
-
-## Mecânicas preservadas
-
-| Funcionalidade | Módulo responsável |
+| Método | Descrição |
 |---|---|
-| Captura de território por polígono | `world.claim_polygon` |
-| Autocolisão removida do jogador | `collision.check_collisions` |
-| Escudo protege de trilhas inimigas | `collision.check_collisions` |
-| Buff de velocidade nas bordas (×1.5, linger 1.5s) | `powerups.PowerUpManager` |
-| 5 power-ups com timers independentes | `powerups.py` |
-| Re-coleta reinicia timer (não acumula) | `ActiveEffect.reset()` |
-| Bomba de Tinta (explosão circular real) | `game._bomb_claim` |
-| Eagle Eye (zoom out 50% do mapa) | `game._draw_eagle_view` |
-| IA de bots: 4 estados | `bot.update_ai` |
-| Título Predador (4+ kills) + minimapa | `game.update` + `hud._draw_predator_badge` |
-| Ranking em tempo real | `hud._draw_ranking` |
-| 27 mapas dos estados brasileiros | `brazil_maps` + `game.GameSession.__init__` |
-| Progressão por nível | `main.py` → `level += 1` |
+| `get(key)` | Retorna Surface do sprite; usa cache; fallback se ausente |
+| `get_scaled(key, w, h)` | Retorna Surface redimensionada; cache por dimensão |
+| `get_animation(key)` | Retorna `AnimationState` para sprites animados |
+| `preload(keys)` | Pré-carrega lista de sprites antes do loop principal |
+| `invalidate(key)` | Remove do cache (força recarregamento) |
+| `reload_config()` | Relê JSON e limpa cache (hot-reload em desenvolvimento) |
+| `list_sprites(categoria)` | Lista chaves registradas, com filtro opcional |
+
+---
+
+## Sistema de Dificuldade dos Bots
+
+Cada partida distribui os 8 bots em três perfis:
+
+```
+Partida (8 bots)
+├── 2 bots com DifficultyProfile("facil")
+│       think_interval=0.55s, hunt_prob=12%, intercept_prob=8%
+├── 4 bots com DifficultyProfile("medio")
+│       think_interval=0.32s, hunt_prob=28%, intercept_prob=22%
+└── 2 bots com DifficultyProfile("dificil")
+        think_interval=0.14s, hunt_prob=45%, intercept_prob=40%
+```
+
+A diferença está na **qualidade das decisões**, não em velocidade artificial:
+- Bots difíceis reavaliam 7× por segundo vs 2× por segundo dos fáceis
+- Bots difíceis preveem 4 passos à frente na interceptação vs 1 passo dos fáceis
+- Bots difíceis buscam power-ups até 260 px de distância vs 110 px dos fáceis
+
+---
+
+## Grafo de dependências (sem circulares)
+
+```
+game_config    ←── todos os módulos
+sprite_config  ←── sprite_manager (fallback)
+difficulty     ←── bot, game
+log_setup      ←── main
+trail          ←── player
+world          ←── player, bot, game
+player         ←── bot (herda Entity), game, collision
+bot            ←── game
+collision      ←── game
+camera         ←── game
+particles      ←── game
+powerups       ←── game
+brazil_maps    ←── game
+sprite_manager ←── player, bot, powerups
+assets         ←── hud, menus, main
+audio          ←── main
+hud            ←── main
+menus          ←── main
+```
+
+---
+
+## Correções de bugs por versão
+
+| Versão | Bug | Arquivo | Correção |
+|---|---|---|---|
+| **1.3.1** | `AttributeError: 'Bot' object has no attribute 'radius'` | `entities/player.py` | Adicionado `@property radius` na classe `Entity` |
 
 ---
 
 ## Executando o projeto
 
 ```bash
-pip install pygame numpy
+# Ubuntu/Linux (recomendado — cria venv automaticamente)
+chmod +x iniciar.sh && ./iniciar.sh
+
+# Manual (qualquer SO)
+pip install pygame>=2.5.0 numpy>=1.24.0
 python main.py
+
+# Com logging verbose
+python main.py --debug
+
+# Testes (sem pytest)
+python tests/run_tests.py
+
+# Testes completos (com pytest)
+pip install pytest && python -m pytest tests/ -v
 ```
 
-Controles: `WASD` ou Setas · `P` pausa · `M` mute · `ESC` menu
+**Controles:** `WASD` / Setas → mover &nbsp;|&nbsp; `P` → pausar &nbsp;|&nbsp; `M` → mute &nbsp;|&nbsp; `ESC` → menu
