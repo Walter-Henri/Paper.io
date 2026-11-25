@@ -21,6 +21,7 @@ from src.systems.sprite_manager import sprite_manager
 
 class Entity:
     _next_id = 1
+    _label_font = None
 
     def __init__(self, x: float, y: float,
                  color:     Tuple[int, int, int],
@@ -175,6 +176,26 @@ class Entity:
         dx, dy = self.direction
         pygame.draw.circle(surface, (255, 255, 255),
                            (sx + int(dx * 5), sy + int(dy * 5)), 3)
+        self.draw_name_tag(surface, sx, sy, r)
+
+    def draw_name_tag(self, surface: pygame.Surface,
+                      sx: int, sy: int, radius: int,
+                      extra_lift: int = 0) -> None:
+        """Nickname flutuante acima da entidade."""
+        if not self.alive or not self.name:
+            return
+        if Entity._label_font is None:
+            Entity._label_font = pygame.font.Font(None, 18)
+        font = Entity._label_font
+        text = font.render(self.name, True, (245, 248, 255))
+        tw, th = text.get_size()
+        lx = sx - tw // 2
+        ly = sy - radius - th - 6 - extra_lift
+        pad = 3
+        bg = pygame.Surface((tw + pad * 2, th + 2), pygame.SRCALPHA)
+        bg.fill((8, 10, 16, 170))
+        surface.blit(bg, (lx - pad, ly - 1))
+        surface.blit(text, (lx, ly))
 
 
 class Player(Entity):

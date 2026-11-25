@@ -1,13 +1,13 @@
 # TerritórIO — Edição Brasil
 ## Documentação Técnica Completa do Projeto
 
-**Versão:** `1.3.1` &nbsp;|&nbsp; [Histórico de versões e correções →](CHANGELOG.md)
+**Versão:** `1.3.2` &nbsp;|&nbsp; [Histórico de versões e correções →](CHANGELOG.md)
 
 ---
 
 ---
 
-> **Nota de versão:** esta documentação reflete o estado do código na versão `1.3.1`.  
+> **Nota de versão:** esta documentação reflete o estado do código na versão `1.3.2`.  
 > Consulte o [CHANGELOG.md](CHANGELOG.md) para o histórico detalhado de todas as alterações.
 
 ---

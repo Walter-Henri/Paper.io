@@ -5,15 +5,12 @@
 # Não contém lógica de menus, fontes ou persistência de dados.
 
 from __future__ import annotations
-import logging
 import random
 import math
 import pygame
-from typing import List, Optional
+from typing import List
 
-logger = logging.getLogger(__name__)
-
-from src.config.difficulty  import get_profile, DIFFICULTIES
+from src.config.difficulty  import get_profile, promote_tier, evolve_for_level
 from src.config.game_config import (
     SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT,
     CELL_SIZE, WORLD_COLS, WORLD_ROWS, BG_COLOR, GRID_COLOR,
@@ -27,8 +24,7 @@ from src.systems.camera     import Camera
 from src.systems.collision  import check_collisions
 from src.systems.particles  import ParticleSystem
 from src.systems.powerups   import PowerUpManager
-from src.systems.sprite_manager import sprite_manager
-from src.core.brazil_maps   import STATE_ORDER, get_state_polygon, project_polygon
+from src.core.brazil_maps   import STATE_ORDER
 
 
 class GameSession:
@@ -92,10 +88,10 @@ class GameSession:
             available = [s for s in SKINS if s["id"] not in used_skins] or SKINS
             skin      = random.choice(available)
             used_skins.add(skin["id"])
-            # Distribui perfis de dificuldade: 2 fáceis, 4 médios, 2 difíceis
+            # Tier sobe com a fase; o perfil ainda é afiado dentro do tier.
             diff_pool = (["facil"] * 2 + ["medio"] * 4 + ["dificil"] * 2)
-            diff_name = diff_pool[i % len(diff_pool)]
-            profile   = get_profile(diff_name)
+            diff_name = promote_tier(diff_pool[i % len(diff_pool)], self.level)
+            profile   = evolve_for_level(get_profile(diff_name), self.level)
             bot = Bot(bx, by, skin,
                       name=names[i % len(names)],
                       difficulty_profile=profile)

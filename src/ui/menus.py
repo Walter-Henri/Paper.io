@@ -7,7 +7,6 @@ from __future__ import annotations
 import random
 import math
 import pygame
-from typing import Optional
 
 from src.config.game_config import (
     SCREEN_WIDTH, SCREEN_HEIGHT, WHITE, YELLOW, GREEN, SKINS,

@@ -7,7 +7,7 @@ from __future__ import annotations
 import pygame
 import random
 import math
-from typing import List, Dict, Optional, Callable, Tuple
+from typing import List, Dict, Optional, Callable
 
 from src.systems.sprite_manager import sprite_manager
 

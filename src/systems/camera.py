@@ -1,6 +1,6 @@
 # Responsabilidade:
-# Gerenciar o acompanhamento suave da câmera ao jogador,
-# zoom para o Eagle Eye e transformações de coordenadas mundo→tela.
+# Gerenciar o acompanhamento suave da câmera ao jogador e
+# o cálculo do offset de renderização.
 # Não contém lógica de jogo, colisão ou renderização de entidades.
 
 from __future__ import annotations
@@ -26,6 +26,3 @@ class Camera:
 
     def offset(self) -> Tuple[float, float]:
         return self.x, self.y
-
-    def world_to_screen(self, wx: float, wy: float) -> Tuple[int, int]:
-        return int(wx - self.x), int(wy - self.y)

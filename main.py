@@ -130,8 +130,6 @@ def main() -> None:
         # Clamp: evita dt gigante após pause/alt-tab; nunca deixa dt = 0
         dt = max(1e-4, min(raw_dt, MAX_DT))
 
-        mouse = pygame.mouse.get_pos()
-
         # ── Eventos ───────────────────────────────────────────────────────────
         for event in pygame.event.get():
 

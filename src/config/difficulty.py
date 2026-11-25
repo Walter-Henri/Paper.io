@@ -130,3 +130,40 @@ def get_profile(name: str) -> DifficultyProfile:
         DifficultyProfile correspondente, ou perfil médio como fallback.
     """
     return DIFFICULTIES.get(name.lower(), DIFFICULTIES[DEFAULT_DIFFICULTY])
+
+
+_TIERS = ("facil", "medio", "dificil")
+
+
+def promote_tier(name: str, level: int) -> str:
+    """Sobe o tier base a cada 2 fases (teto: difícil)."""
+    promo = min(2, max(0, level - 1) // 2)
+    try:
+        idx = _TIERS.index(name.lower())
+    except ValueError:
+        idx = 1
+    return _TIERS[min(2, idx + promo)]
+
+
+def evolve_for_level(profile: DifficultyProfile, level: int) -> DifficultyProfile:
+    """
+    Afia o perfil conforme a fase. Nível 1 = perfil base.
+    Cada fase seguinte deixa o bot mais rápido para decidir, mais agressivo
+    e com mais alcance, com teto para não explodir os números.
+    """
+    steps = max(0, int(level) - 1)
+    if steps == 0:
+        return profile
+    return DifficultyProfile(
+        name=profile.name,
+        speed_multiplier=min(1.25, profile.speed_multiplier + 0.02 * steps),
+        think_interval=max(0.07, profile.think_interval * (0.92 ** steps)),
+        hunt_range_factor=min(1.85, profile.hunt_range_factor + 0.05 * steps),
+        danger_range_factor=min(1.70, profile.danger_range_factor + 0.04 * steps),
+        max_trail_factor=min(0.95, profile.max_trail_factor + 0.02 * steps),
+        intercept_prob=min(0.75, profile.intercept_prob + 0.035 * steps),
+        hunt_prob=min(0.80, profile.hunt_prob + 0.035 * steps),
+        powerup_max_dist=min(420.0, profile.powerup_max_dist + 18.0 * steps),
+        lookahead_steps=min(8, profile.lookahead_steps + steps // 2),
+        priority_types=list(profile.priority_types),
+    )

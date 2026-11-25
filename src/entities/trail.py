@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 from typing import List, Tuple
-import math
 
 Point = Tuple[float, float]
 
@@ -32,16 +31,6 @@ class Trail:
     def clear(self) -> None:
         self.points.clear()
         self.active = True
-
-    def length(self) -> float:
-        if len(self.points) < 2:
-            return 0.0
-        total = 0.0
-        for i in range(1, len(self.points)):
-            dx = self.points[i][0] - self.points[i-1][0]
-            dy = self.points[i][1] - self.points[i-1][1]
-            total += math.hypot(dx, dy)
-        return total
 
     def is_near_start(self, x: float, y: float,
                       threshold: float = 22.0) -> bool:

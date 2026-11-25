@@ -1,40 +1,80 @@
-# Responsabilidade:
-# Detectar colisões entre cabeças de entidades e trilhas.
-# Implementa proteção contra autocolisão do jogador e respeita o escudo.
-# Retorna pares (killer, victim) sem aplicar as mortes diretamente.
-# Não contém lógica de movimento, renderização ou IA.
+"""
+collision.py — TerritórIO: Edição Brasil
+-----------------------------------------
+Responsabilidade:
+    Detectar colisões entre a cabeça de cada entidade e os segmentos
+    de trilha das demais entidades no mapa.
+
+Regras de eliminação:
+    - Nenhuma entidade (jogador ou bot) morre pela PRÓPRIA trilha.
+      Autocolisão é completamente ignorada para todos.
+    - Uma entidade morre ao tocar a trilha de OUTRA entidade.
+    - O escudo ativo protege o JOGADOR de morrer por trilha alheia.
+
+Retorna lista de pares (killer, victim) sem duplicatas de vítima.
+Não aplica as mortes diretamente — isso é responsabilidade de game.py.
+
+Correção v1.3.2:
+    Autocolisão removida também para bots (antes era parcialmente
+    mantida via MIN_SELF_TRAIL / SELF_IMMUNITY_POINTS, o que causava
+    eliminação incorreta ao atravessar a própria trilha).
+"""
 
 from __future__ import annotations
-from typing import List, Tuple
-import math
 
-from src.entities.player  import Entity
-from src.config.game_config import (
-    KILL_RADIUS, SELF_IMMUNITY_POINTS, MIN_SELF_TRAIL
-)
+import math
+from typing import List, Tuple
+
+from src.config.game_config import KILL_RADIUS
+from src.entities.player import Entity
 
 
 def _point_to_segment_dist(px: float, py: float,
                             ax: float, ay: float,
                             bx: float, by: float) -> float:
-    abx, aby  = bx - ax, by - ay
-    apx, apy  = px - ax, py - ay
-    ab_len2   = abx * abx + aby * aby
+    """
+    Distância mínima entre o ponto (px, py) e o segmento (ax,ay)→(bx,by).
+
+    Parâmetros:
+        px, py — coordenadas do ponto
+        ax, ay — extremo inicial do segmento
+        bx, by — extremo final do segmento
+
+    Retorna:
+        Distância em pixels (float ≥ 0).
+    """
+    abx, aby = bx - ax, by - ay
+    apx, apy = px - ax, py - ay
+    ab_len2  = abx * abx + aby * aby
     if ab_len2 < 1e-6:
         return math.hypot(apx, apy)
     t = max(0.0, min(1.0, (apx * abx + apy * aby) / ab_len2))
     return math.hypot(px - (ax + t * abx), py - (ay + t * aby))
 
 
-def check_collisions(entities: List[Entity],
-                     player_entity: Entity,
-                     shield_active: bool) -> List[Tuple[Entity, Entity]]:
+def check_collisions(
+    entities: List[Entity],
+    player_entity: Entity,
+    shield_active: bool,
+) -> List[Tuple[Entity, Entity]]:
     """
-    Detecta colisões trilha→cabeça com duas regras adicionais:
-    1. Jogador nunca morre pela própria trilha (autocolisão removida).
-    2. Escudo ativo protege o jogador de trilhas inimigas.
+    Verifica colisões trilha→cabeça entre todas as entidades vivas.
 
-    Retorna lista de pares (killer, victim) sem duplicatas de vítima.
+    Regras implementadas:
+        1. Autocolisão ignorada para TODOS (jogador e bots).
+           Nenhuma entidade morre ao atravessar a própria trilha.
+        2. Colisão com trilha ALHEIA elimina a entidade colidindo.
+        3. Escudo ativo protege apenas o jogador de trilhas inimigas.
+
+    Parâmetros:
+        entities      — lista de todas as entidades (Player + Bots)
+        player_entity — referência ao jogador humano
+        shield_active — True se o escudo do jogador está ativo
+
+    Retorna:
+        Lista de pares (killer, victim) sem vítimas duplicadas.
+        'killer' é quem possui a trilha que causou a eliminação.
+        'victim' é quem colidiu com essa trilha.
     """
     kills  = []
     radius = KILL_RADIUS
@@ -44,48 +84,40 @@ def check_collisions(entities: List[Entity],
             continue
         hx, hy = head.x, head.y
 
-        for victim in entities:
-            if not victim.alive or not victim.trail.active:
-                continue
-            points = victim.trail.points
-            n      = len(points)
-            if n < 3:
+        for trail_owner in entities:
+            if not trail_owner.alive or not trail_owner.trail.active:
                 continue
 
-            is_self = (victim is head)
-
-            # ── Regra: jogador não morre pela própria trilha ────────────────
-            if is_self and head is player_entity:
+            # ── REGRA 1: autocolisão ignorada para todos ──────────────────
+            if trail_owner is head:
                 continue
 
-            # Bots mantêm autocolisão com imunidade parcial
-            if is_self:
-                if n < MIN_SELF_TRAIL:
-                    continue
-                end_idx = n - SELF_IMMUNITY_POINTS
-                if end_idx < 2:
-                    continue
-                check_range = range(1, end_idx)
-            else:
-                check_range = range(1, n)
+            points = trail_owner.trail.points
+            if len(points) < 2:
+                continue
 
+            # Verifica cada segmento da trilha alheia
             hit = False
-            for i in check_range:
+            for i in range(1, len(points)):
                 ax, ay = points[i - 1]
                 bx, by = points[i]
                 if _point_to_segment_dist(hx, hy, ax, ay, bx, by) < radius:
                     hit = True
                     break
 
-            if hit:
-                # ── Regra: escudo protege o jogador ────────────────────────
-                if head is player_entity and not is_self and shield_active:
-                    break
-                kills.append((head, victim))
-                break
+            if not hit:
+                continue
 
-    # Remove duplicatas de vítimas
-    seen, unique = set(), []
+            # ── REGRA 2: escudo protege o jogador ────────────────────────
+            if head is player_entity and shield_active:
+                break   # protegido — ignora todos os hits desta iteração
+
+            kills.append((head, trail_owner))
+            break   # uma colisão por cabeça é suficiente
+
+    # Remove duplicatas de vítimas (cada entidade morre no máximo uma vez)
+    seen:   set  = set()
+    unique: list = []
     for killer, victim in kills:
         if victim.id not in seen:
             seen.add(victim.id)

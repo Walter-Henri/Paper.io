@@ -7,10 +7,9 @@
 from __future__ import annotations
 import math
 import pygame
-from typing import List
 
 from src.config.game_config import (
-    SCREEN_WIDTH, SCREEN_HEIGHT, WHITE, YELLOW, RED,
+    SCREEN_WIDTH, SCREEN_HEIGHT, WHITE, YELLOW,
     WORLD_WIDTH, WORLD_HEIGHT, CELL_SIZE, WORLD_COLS, WORLD_ROWS,
 )
 
@@ -216,9 +215,8 @@ class HUD:
                 continue
 
             if e is session.player:
-                # Jogador: triângulo branco + pulso
+                # Jogador: círculo branco + anéis de pulso
                 r_p  = 5
-                pulse = int(2 * math.sin(t * 4))
                 for ring in range(2):
                     rs = pygame.Surface(((r_p+ring+2)*2+2, (r_p+ring+2)*2+2), pygame.SRCALPHA)
                     pygame.draw.circle(rs, (255, 255, 255, 80 - ring*30),

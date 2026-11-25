@@ -647,6 +647,7 @@ class Bot(Entity):
         dx, dy = self.direction
         pygame.draw.circle(surface, (255, 255, 255),
                            (sx + int(dx * 5), sy + int(dy * 5)), 3)
+        self.draw_name_tag(surface, sx, sy, r, extra_lift=6)
 
     def _trail_color_by_state(self) -> Tuple[int, int, int]:
         """Retorna cor da trilha levemente modificada pelo estado atual."""
