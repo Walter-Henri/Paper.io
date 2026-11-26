@@ -30,6 +30,10 @@ class World:
         self.cell        = CELL_SIZE
         self.grid:  List[int] = [0] * (self.cols * self.rows)
         self.total_cells = self.cols * self.rows
+        self.arena_cells = self.total_cells
+        self.playable = bytearray(b"\x01") * self.total_cells
+        self.has_mask = False
+        self.outline: List[Tuple[float, float]] = []
         self._counts: dict = {}
 
     def _idx(self, cx: int, cy: int) -> int:
@@ -50,11 +54,75 @@ class World:
     def set_owner_cell(self, cx: int, cy: int, owner_id: int) -> None:
         if not self.in_bounds_cell(cx, cy):
             return
-        old = self.grid[self._idx(cx, cy)]
+        idx = self._idx(cx, cy)
+        if not self.playable[idx]:
+            return
+        old = self.grid[idx]
         if old != owner_id:
-            self.grid[self._idx(cx, cy)] = owner_id
+            self.grid[idx] = owner_id
             self._counts[old]      = self._counts.get(old,      0) - 1
             self._counts[owner_id] = self._counts.get(owner_id, 0) + 1
+
+    def is_playable_point(self, x: float, y: float) -> bool:
+        cx, cy = self.world_to_cell(x, y)
+        if not self.in_bounds_cell(cx, cy):
+            return False
+        return bool(self.playable[self._idx(cx, cy)])
+
+    def apply_arena_polygon(self, points: List[Tuple[float, float]]) -> None:
+        """Marca como jogáveis só as células dentro do contorno do estado."""
+        from src.core.brazil_maps import point_in_polygon
+        if len(points) < 3:
+            return
+        mask = bytearray(self.total_cells)
+        count = 0
+        for cy in range(self.rows):
+            py = (cy + 0.5) * self.cell
+            base = cy * self.cols
+            for cx in range(self.cols):
+                px = (cx + 0.5) * self.cell
+                if point_in_polygon(px, py, points):
+                    mask[base + cx] = 1
+                    count += 1
+        if count < 32:
+            return
+        self.playable = mask
+        self.arena_cells = count
+        self.has_mask = True
+        self.outline = list(points)
+
+    def random_playable_point(self, rng, margin: float = 48.0,
+                               attempts: int = 80) -> Tuple[float, float]:
+        for _ in range(attempts):
+            x = rng.uniform(margin, self.cols * self.cell - margin)
+            y = rng.uniform(margin, self.rows * self.cell - margin)
+            if self.is_playable_point(x, y):
+                return x, y
+        return self.playable_spawn()
+
+    def playable_spawn(self) -> Tuple[float, float]:
+        """Ponto interior, próximo do centro de massa da área jogável."""
+        sx = sy = n = 0
+        for cy in range(0, self.rows, 2):
+            base = cy * self.cols
+            for cx in range(0, self.cols, 2):
+                if self.playable[base + cx]:
+                    sx += cx
+                    sy += cy
+                    n += 1
+        if not n:
+            return self.cols * self.cell * 0.5, self.rows * self.cell * 0.5
+        cx = int(sx / n)
+        cy = int(sy / n)
+        if self.playable[self._idx(cx, cy)]:
+            return (cx + 0.5) * self.cell, (cy + 0.5) * self.cell
+        for radius in range(1, max(self.cols, self.rows)):
+            for dy in range(-radius, radius + 1):
+                for dx in range(-radius, radius + 1):
+                    nx, ny = cx + dx, cy + dy
+                    if self.in_bounds_cell(nx, ny) and self.playable[self._idx(nx, ny)]:
+                        return (nx + 0.5) * self.cell, (ny + 0.5) * self.cell
+        return self.cols * self.cell * 0.5, self.rows * self.cell * 0.5
 
     def is_own_territory(self, x: float, y: float, owner_id: int) -> bool:
         return self.get_owner(x, y) == owner_id
@@ -63,18 +131,41 @@ class World:
         return max(0, self._counts.get(owner_id, 0))
 
     def ownership_percent(self, owner_id: int) -> float:
-        return (self.count_owned(owner_id) / self.total_cells) * 100.0
+        base = self.arena_cells or self.total_cells
+        return (self.count_owned(owner_id) / base) * 100.0
 
     def seed_starting_territory(self, x: float, y: float,
                                  owner_id: int,
-                                 radius_cells: int = 7) -> None:
-        """Atribui um disco de células ao dono no início da partida."""
+                                 radius_cells: int = 7,
+                                 only_empty: bool = False) -> None:
+        """Atribui um disco de células ao dono. only_empty não pisa tinta alheia."""
         cx, cy = self.world_to_cell(x, y)
         r2 = radius_cells * radius_cells
         for dy in range(-radius_cells, radius_cells + 1):
             for dx in range(-radius_cells, radius_cells + 1):
-                if dx * dx + dy * dy <= r2:
-                    self.set_owner_cell(cx + dx, cy + dy, owner_id)
+                if dx * dx + dy * dy > r2:
+                    continue
+                nx, ny = cx + dx, cy + dy
+                if not self.in_bounds_cell(nx, ny):
+                    continue
+                if only_empty and self.grid[self._idx(nx, ny)] not in (0, owner_id):
+                    continue
+                self.set_owner_cell(nx, ny, owner_id)
+
+    def random_unowned_point(self, rng, attempts: int = 60):
+        """Célula jogável ainda sem dono, ou None se o mapa está pintado."""
+        span_x = self.cols * self.cell
+        span_y = self.rows * self.cell
+        for _ in range(attempts):
+            x = rng.uniform(0, span_x)
+            y = rng.uniform(0, span_y)
+            if self.is_playable_point(x, y) and self.get_owner(x, y) == 0:
+                return x, y
+        for i, owner in enumerate(self.grid):
+            if owner == 0 and self.playable[i]:
+                cx, cy = i % self.cols, i // self.cols
+                return (cx + 0.5) * self.cell, (cy + 0.5) * self.cell
+        return None
 
     def clear_owner(self, owner_id: int) -> None:
         """Remove todas as células pertencentes ao dono."""
@@ -249,7 +340,7 @@ class World:
         claimed = 0
         cols = self.cols
         for i in range(self.total_cells):
-            if self.grid[i] == owner_id:
+            if not self.playable[i] or self.grid[i] == owner_id:
                 continue
             is_trail = full[i] and not own[i]
             newly_inside = (not reach_full[i]) and reach_base[i] and not full[i]

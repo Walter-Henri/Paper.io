@@ -155,7 +155,7 @@ class Bot(Entity):
         if math.hypot(dx, dy) < 2.0:
             self._stuck_timer += self._profile.think_interval
             if self._stuck_timer > 1.5:
-                self._force_unstick()
+                self._force_unstick(world)
                 self._stuck_timer = 0.0
         else:
             self._stuck_timer = 0.0
@@ -496,9 +496,7 @@ class Bot(Entity):
                     score += 0.30 / step
                 else:
                     score -= 0.10 / step
-            margin = 70
-            if (px < margin or px > WORLD_WIDTH  - margin or
-                    py < margin or py > WORLD_HEIGHT - margin):
+            if not world.is_playable_point(px, py):
                 score -= 0.60
             scored.append((score, d))
         scored.sort(key=lambda t: t[0], reverse=True)
@@ -532,7 +530,7 @@ class Bot(Entity):
             for step in range(1, lookahead + 1):
                 px += d[0] * step_size
                 py += d[1] * step_size
-                if not (0 < px < WORLD_WIDTH and 0 < py < WORLD_HEIGHT):
+                if not world.is_playable_point(px, py):
                     break
                 if world.is_own_territory(px, py, self.id) and step < best_steps:
                     best_steps = step
@@ -541,7 +539,7 @@ class Bot(Entity):
 
         return best_dir
 
-    def _force_unstick(self) -> None:
+    def _force_unstick(self, world) -> None:
         """
         Mecanismo anti-stuck: força direção perpendicular quando o bot
         permanece imóvel por mais de 1.5 s.
@@ -557,7 +555,7 @@ class Bot(Entity):
         for d in perp:
             px = self.x + d[0] * 30
             py = self.y + d[1] * 30
-            if 20 < px < WORLD_WIDTH - 20 and 20 < py < WORLD_HEIGHT - 20:
+            if world.is_playable_point(px, py):
                 self.set_direction(*d)
                 return
         candidates = [

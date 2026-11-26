@@ -15,7 +15,7 @@ from src.config.game_config import (
     SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT,
     CELL_SIZE, WORLD_COLS, WORLD_ROWS, BG_COLOR, GRID_COLOR,
     SKINS, NUM_BOTS, BOT_NAMES, PLAYER_RADIUS, PLAYER_SPEED,
-    CAMERA_LERP,
+    CAMERA_LERP, TRAIL_WIDTH, DIRECTIONS,
 )
 from src.entities.world     import World
 from src.entities.player    import Player, Entity
@@ -24,7 +24,7 @@ from src.systems.camera     import Camera
 from src.systems.collision  import check_collisions
 from src.systems.particles  import ParticleSystem
 from src.systems.powerups   import PowerUpManager
-from src.core.brazil_maps   import STATE_ORDER
+from src.core.brazil_maps   import STATE_ORDER, state_arena_polygon
 
 
 class GameSession:
@@ -41,6 +41,7 @@ class GameSession:
 
         # Sistemas
         self.world     = World()
+        self.world.apply_arena_polygon(state_arena_polygon(self.state_name))
         self.particles = ParticleSystem()
         self.camera    = Camera()
         self.pu_manager = PowerUpManager(WORLD_WIDTH, WORLD_HEIGHT)
@@ -66,9 +67,9 @@ class GameSession:
     # ── Inicialização ──────────────────────────────────────────────────────────
 
     def _spawn_player(self) -> Player:
-        px, py = WORLD_WIDTH * 0.5, WORLD_HEIGHT * 0.5
+        px, py = self.world.playable_spawn()
         p = Player(px, py, self.skin)
-        self.world.seed_starting_territory(px, py, p.id, radius_cells=9)
+        self.world.seed_starting_territory(px, py, p.id, radius_cells=8)
         self.entities.append(p)
         return p
 
@@ -79,23 +80,21 @@ class GameSession:
         names      = random.sample(BOT_NAMES, min(NUM_BOTS, len(BOT_NAMES)))
 
         for i in range(NUM_BOTS):
-            # Posição que não sobreponha o jogador
+            bx, by = px, py
             for _ in range(300):
-                bx = random.uniform(80, WORLD_WIDTH  - 80)
-                by = random.uniform(80, WORLD_HEIGHT - 80)
-                if abs(bx - px) > 220 or abs(by - py) > 220:
+                bx, by = self.world.random_playable_point(random, margin=70)
+                if abs(bx - px) > 200 or abs(by - py) > 200:
                     break
             available = [s for s in SKINS if s["id"] not in used_skins] or SKINS
             skin      = random.choice(available)
             used_skins.add(skin["id"])
-            # Tier sobe com a fase; o perfil ainda é afiado dentro do tier.
             diff_pool = (["facil"] * 2 + ["medio"] * 4 + ["dificil"] * 2)
             diff_name = promote_tier(diff_pool[i % len(diff_pool)], self.level)
             profile   = evolve_for_level(get_profile(diff_name), self.level)
             bot = Bot(bx, by, skin,
                       name=names[i % len(names)],
                       difficulty_profile=profile)
-            self.world.seed_starting_territory(bx, by, bot.id, radius_cells=6)
+            self.world.seed_starting_territory(bx, by, bot.id, radius_cells=5)
             self.entities.append(bot)
             bots.append(bot)
         return bots
@@ -116,10 +115,20 @@ class GameSession:
             if not e.alive:
                 if e.death_timer > 0:
                     e.death_timer -= dt
+                else:
+                    self._respawn(e)
                 continue
             if isinstance(e, Bot):
                 e.update_ai(dt, self.world, self.entities, powerup_items=pu_items)
+            prev_x, prev_y = e.x, e.y
             e.update_position(dt)
+            if self.world.has_mask and not self.world.is_playable_point(e.x, e.y):
+                if self.world.is_playable_point(e.x, prev_y):
+                    e.y = prev_y
+                elif self.world.is_playable_point(prev_x, e.y):
+                    e.x = prev_x
+                else:
+                    e.x, e.y = prev_x, prev_y
             claimed = e.update_trail_and_claim(self.world)
             if claimed > 0 and e.just_claimed:
                 trail_pts = e.trail.points or [(e.x, e.y)]
@@ -156,11 +165,15 @@ class GameSession:
             bot_bomb_callback=self._bot_bomb_claim,
         )
         self.pu_manager.update_bot_effects(dt, self.bots)
+        if self.world.has_mask:
+            self.pu_manager.items = [
+                it for it in self.pu_manager.items
+                if self.world.is_playable_point(it.x, it.y)
+            ]
 
-        # Pontuação
+        # Pontuação — a partida só acaba quando alguém pinta o estado inteiro
         for e in self.entities:
-            if e.alive:
-                e.score_percent = self.world.ownership_percent(e.id)
+            e.score_percent = self.world.ownership_percent(e.id)
 
         # Partículas e notificações
         self.particles.update(dt)
@@ -178,23 +191,46 @@ class GameSession:
             cam_lerp = 0.08 if self.pu_manager.eagle_active else CAMERA_LERP
             self.camera.follow(self.player.x, self.player.y, lerp=cam_lerp)
 
-        # Condições de fim
-        if not self.player.alive:
-            self._finish(won=False)
-            return
-        alive_others = [e for e in self.entities
-                        if e.alive and e is not self.player]
-        if not alive_others or self.player.score_percent >= 100.0:
-            self._finish(won=True)
+        arena = self.world.arena_cells or self.world.total_cells
+        for e in self.entities:
+            if self.world.count_owned(e.id) >= arena:
+                self._finish(won=(e is self.player))
+                return
 
-    # ── Helpers ───────────────────────────────────────────────────────────────
+    def _respawn(self, entity) -> None:
+        """Renasce numa célula jogável que ainda não foi pintada."""
+        spot = self.world.random_unowned_point(random)
+        if spot is None:
+            return
+        x, y = spot
+        entity.alive = True
+        entity.x = x
+        entity.y = y
+        entity.death_timer = 0.0
+        entity.outside = False
+        entity.drawing = False
+        entity.just_claimed = False
+        entity.trail.clear()
+        entity.direction = random.choice(DIRECTIONS)
+        self.world.seed_starting_territory(
+            x, y, entity.id, radius_cells=4, only_empty=True,
+        )
+        if entity is self.player:
+            self.camera.follow(x, y, lerp=1.0)
 
     def _player_on_edge(self) -> bool:
+        """Impulso de borda: encostar no contorno do estado (ou no retângulo)."""
+        x, y = self.player.x, self.player.y
+        reach = PLAYER_RADIUS + 6
+        if self.world.has_mask:
+            for dx, dy in ((reach, 0), (-reach, 0), (0, reach), (0, -reach),
+                           (reach, reach), (reach, -reach), (-reach, reach), (-reach, -reach)):
+                if not self.world.is_playable_point(x + dx, y + dy):
+                    return True
+            return False
         m = PLAYER_RADIUS + 4
-        return (self.player.x <= m or
-                self.player.x >= WORLD_WIDTH  - m or
-                self.player.y <= m or
-                self.player.y >= WORLD_HEIGHT - m)
+        return (x <= m or x >= WORLD_WIDTH - m or
+                y <= m or y >= WORLD_HEIGHT - m)
 
     def _bomb_claim(self, cx: float, cy: float, radius: float) -> None:
         min_gx = max(0,            int((cx - radius) / CELL_SIZE))
@@ -246,15 +282,19 @@ class GameSession:
             self._draw_eagle_view(surface)
         else:
             self._draw_grid(surface, ox, oy)
-            self._draw_world_border(surface, ox, oy)
+            self._draw_void(surface, ox, oy)
+            if not self.world.has_mask:
+                self._draw_world_border(surface, ox, oy)
             self._draw_territory(surface, ox, oy)
+            if self.world.has_mask:
+                self._draw_state_outline(surface, ox, oy)
             for e in self.entities:
                 if e.alive or e.death_timer > 0:
                     e.draw(surface, (ox, oy))
             self.particles.draw(surface, ox, oy)
             self.pu_manager.draw_world(surface, ox, oy)
 
-        if self.pu_manager.shield_active:
+        if self.pu_manager.shield_active and not self.pu_manager.eagle_active:
             self._draw_shield_vfx(surface, ox, oy)
 
     # ── Componentes de draw ───────────────────────────────────────────────────
@@ -315,44 +355,114 @@ class GameSession:
                      int(cy*CELL_SIZE - oy),
                      CELL_SIZE, CELL_SIZE))
 
+    def _eagle_camera(self) -> tuple[float, float, float]:
+        """Zoom afastado com o jogador sempre no centro da tela."""
+        scale = 0.70
+        view_w = SCREEN_WIDTH / scale
+        view_h = SCREEN_HEIGHT / scale
+        cam_x = self.player.x - view_w / 2.0
+        cam_y = self.player.y - view_h / 2.0
+        return scale, -cam_x * scale, -cam_y * scale
+
+    def _draw_void(self, surface: pygame.Surface, ox: float, oy: float) -> None:
+        if not self.world.has_mask:
+            return
+        void = (8, 10, 16)
+        sc = max(0, int(ox // CELL_SIZE) - 1)
+        ec = min(WORLD_COLS, int((ox + SCREEN_WIDTH) // CELL_SIZE) + 2)
+        sr = max(0, int(oy // CELL_SIZE) - 1)
+        er = min(WORLD_ROWS, int((oy + SCREEN_HEIGHT) // CELL_SIZE) + 2)
+        for cy in range(sr, er):
+            base = cy * WORLD_COLS
+            py = int(cy * CELL_SIZE - oy)
+            for cx in range(sc, ec):
+                if self.world.playable[base + cx]:
+                    continue
+                pygame.draw.rect(
+                    surface, void,
+                    (int(cx * CELL_SIZE - ox), py, CELL_SIZE, CELL_SIZE),
+                )
+
+    def _draw_state_outline(self, surface: pygame.Surface,
+                            ox: float, oy: float, scale: float = 1.0,
+                            off_x: float | None = None, off_y: float | None = None) -> None:
+        outline = self.world.outline
+        if len(outline) < 3:
+            return
+        if off_x is None:
+            pts = [(int(x - ox), int(y - oy)) for x, y in outline]
+        else:
+            pts = [(int(x * scale + off_x), int(y * scale + off_y)) for x, y in outline]
+        pygame.draw.lines(surface, (30, 48, 80), True, pts, 6)
+        pygame.draw.lines(surface, (150, 198, 255), True, pts, 3)
+
     def _draw_eagle_view(self, surface: pygame.Surface) -> None:
-        scale = min(SCREEN_WIDTH / WORLD_WIDTH,
-                    SCREEN_HEIGHT / WORLD_HEIGHT) * 1.65
-        off_x = (SCREEN_WIDTH  - WORLD_WIDTH  * scale) / 2
-        off_y = (SCREEN_HEIGHT - WORLD_HEIGHT * scale) / 2
-        step  = 3
+        scale, off_x, off_y = self._eagle_camera()
+        surface.fill((8, 10, 16))
+
+        step = 2
+        cell_px = max(2, int(CELL_SIZE * step * scale))
         for cy in range(0, WORLD_ROWS, step):
             for cx in range(0, WORLD_COLS, step):
-                owner = self.world.grid[cy * WORLD_COLS + cx]
-                if not owner:
+                idx = cy * WORLD_COLS + cx
+                if self.world.has_mask and not self.world.playable[idx]:
                     continue
-                color = self._color_map.get(owner)
-                if not color:
-                    continue
-                fill = (max(0,color[0]-30),max(0,color[1]-30),max(0,color[2]-30))
-                sx   = int(cx * CELL_SIZE * scale + off_x)
-                sy   = int(cy * CELL_SIZE * scale + off_y)
-                size = max(2, int(CELL_SIZE * step * scale))
-                pygame.draw.rect(surface, fill, (sx, sy, size, size))
-        pygame.draw.rect(surface, (90, 130, 255),
-            (int(off_x), int(off_y),
-             int(WORLD_WIDTH*scale), int(WORLD_HEIGHT*scale)), 3)
+                owner = self.world.grid[idx]
+                if owner:
+                    color = self._color_map.get(owner)
+                    if not color:
+                        continue
+                    fill = (max(0, color[0] - 30), max(0, color[1] - 30), max(0, color[2] - 30))
+                else:
+                    fill = BG_COLOR
+                sx = int(cx * CELL_SIZE * scale + off_x)
+                sy = int(cy * CELL_SIZE * scale + off_y)
+                pygame.draw.rect(surface, fill, (sx, sy, cell_px, cell_px))
+
+        if self.world.has_mask:
+            self._draw_state_outline(surface, 0, 0, scale, off_x, off_y)
+        else:
+            pygame.draw.rect(
+                surface, (90, 130, 255),
+                (int(off_x), int(off_y), int(WORLD_WIDTH * scale), int(WORLD_HEIGHT * scale)),
+                3,
+            )
+
+        for e in self.entities:
+            if len(e.trail.points) >= 2 and (e.alive or e.death_timer > 0):
+                pts = [
+                    (int(p[0] * scale + off_x), int(p[1] * scale + off_y))
+                    for p in e.trail.points
+                ]
+                width = max(2, int(TRAIL_WIDTH * scale) + 1)
+                pygame.draw.lines(surface, e.secondary, False, pts, width + 2)
+                pygame.draw.lines(surface, e.color, False, pts, width)
+
+        name_font = pygame.font.Font(None, 16)
         for e in self.entities:
             if not e.alive:
                 continue
             sx = int(e.x * scale + off_x)
             sy = int(e.y * scale + off_y)
-            r  = max(4, int(PLAYER_RADIUS * scale * 1.5))
-            pygame.draw.circle(surface, (20,20,30), (sx,sy), r+2)
-            pygame.draw.circle(surface, e.color,    (sx,sy), r)
+            r = max(5, int(PLAYER_RADIUS * scale * 1.6))
+            pygame.draw.circle(surface, (20, 20, 30), (sx, sy), r + 2)
+            pygame.draw.circle(surface, e.color, (sx, sy), r)
             if e is self.player:
-                pygame.draw.circle(surface,(255,255,255),(sx,sy),r,2)
-        if self.pu_manager:
-            for item in self.pu_manager.items:
-                sx = int(item.x * scale + off_x)
-                sy = int(item.y * scale + off_y)
-                pygame.draw.circle(surface, item.color, (sx,sy), 7)
-                pygame.draw.circle(surface,(255,255,255),(sx,sy),7,1)
+                pygame.draw.circle(surface, (255, 255, 255), (sx, sy), r, 2)
+            if e.name:
+                lbl = name_font.render(e.name, True, (245, 248, 255))
+                surface.blit(lbl, (sx - lbl.get_width() // 2, sy - r - 14))
+
+        for item in self.pu_manager.items:
+            sx = int(item.x * scale + off_x)
+            sy = int(item.y * scale + off_y)
+            pygame.draw.circle(surface, item.color, (sx, sy), 7)
+            pygame.draw.circle(surface, (255, 255, 255), (sx, sy), 7, 1)
+
+        if self.pu_manager.shield_active and self.player.alive:
+            sx = int(self.player.x * scale + off_x)
+            sy = int(self.player.y * scale + off_y)
+            pygame.draw.circle(surface, (100, 255, 100), (sx, sy), max(8, int(18 * scale)), 2)
 
     def _draw_shield_vfx(self, surface: pygame.Surface,
                           ox: float, oy: float) -> None:

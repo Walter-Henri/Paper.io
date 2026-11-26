@@ -168,14 +168,24 @@ class HUD:
         pygame.draw.rect(surface, (200, 50, 50, border_alpha),
                          (mm_x, mm_y, mm, mm), 2, border_radius=4)
 
-        # Território (passo fino para melhor resolução)
+        # Território dentro do contorno do estado
         step = 3
         cm   = session._color_map
         grid = session.world.grid
+        playable = session.world.playable
+        has_mask = session.world.has_mask
         for cy in range(0, WORLD_ROWS, step):
             for cx in range(0, WORLD_COLS, step):
-                owner = grid[cy * WORLD_COLS + cx]
+                idx = cy * WORLD_COLS + cx
+                if has_mask and not playable[idx]:
+                    continue
+                owner = grid[idx]
                 if not owner:
+                    if has_mask:
+                        mx = int(cx * CELL_SIZE * sc) + mm_x
+                        my = int(cy * CELL_SIZE * sc) + mm_y
+                        ssz = max(2, int(CELL_SIZE * step * sc) + 1)
+                        pygame.draw.rect(surface, (28, 36, 52), (mx, my, ssz, ssz))
                     continue
                 color = cm.get(owner)
                 if not color:
@@ -184,6 +194,11 @@ class HUD:
                 my  = int(cy * CELL_SIZE * sc) + mm_y
                 ssz = max(2, int(CELL_SIZE * step * sc) + 1)
                 pygame.draw.rect(surface, color, (mx, my, ssz, ssz))
+
+        outline = session.world.outline
+        if len(outline) >= 3:
+            pts = [(int(x * sc) + mm_x, int(y * sc) + mm_y) for x, y in outline]
+            pygame.draw.lines(surface, (150, 198, 255), True, pts, 2)
 
         # Radar sweep (linha giratória sutil)
         sweep_angle = (t * 60) % 360
