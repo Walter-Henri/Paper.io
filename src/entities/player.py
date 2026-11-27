@@ -1,9 +1,3 @@
-# Responsabilidade:
-# Definir a entidade base (Entity) e o jogador controlado (Player).
-# Gerenciar movimentação, coleta de trilha, captura de território
-# e aplicação dos efeitos de power-up recebidos do PowerUpManager.
-# Renderização usa sprite_manager para recursos visuais.
-# Não contém lógica de IA, colisão ou spawn de power-ups.
 
 from __future__ import annotations
 from typing import Tuple, Optional
@@ -11,7 +5,6 @@ import pygame
 
 from src.config.game_config import (
     PLAYER_SPEED, PLAYER_RADIUS, TRAIL_WIDTH, TRAIL_SAMPLE_DIST,
-    WORLD_WIDTH, WORLD_HEIGHT,
     DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT,
     MIN_CLAIM_POINTS, CLOSE_THRESHOLD,
 )
@@ -48,36 +41,24 @@ class Entity:
         self.drawing   = False
         self.just_claimed = False
         self.death_timer  = 0.0
+        self.slide_sign   = 0
 
-    # ── Raio de colisão ────────────────────────────────────────────────────────
-
+    # Raio de colisão
     @property
     def radius(self) -> int:
         """Raio lógico da entidade para colisão e detecção de proximidade."""
         return PLAYER_RADIUS
 
-    # ── Direção ────────────────────────────────────────────────────────────────
-
+    # Direção
     def set_direction(self, dx: int, dy: int) -> None:
-        if dx == -self.direction[0] and dy == -self.direction[1]:
-            return   # sem reversão instantânea de 180°
+        # Permite virar 180° e voltar pelo mesmo caminho.
         if dx == 0 and dy == 0:
             return
         self.direction = (dx, dy)
 
-    # ── Movimentação ───────────────────────────────────────────────────────────
+    # Movimentação
 
-    def update_position(self, dt: float) -> None:
-        if not self.alive:
-            return
-        self.x += self.direction[0] * self.speed * dt
-        self.y += self.direction[1] * self.speed * dt
-        margin = PLAYER_RADIUS + 2
-        self.x = max(margin, min(WORLD_WIDTH  - margin, self.x))
-        self.y = max(margin, min(WORLD_HEIGHT - margin, self.y))
-
-    # ── Trilha e captura ───────────────────────────────────────────────────────
-
+    # Trilha e captura
     def update_trail_and_claim(self, world) -> int:
         """Retorna número de células capturadas neste frame."""
         self.just_claimed = False
@@ -121,16 +102,14 @@ class Entity:
 
         return 0
 
-    # ── Morte ──────────────────────────────────────────────────────────────────
-
+    # Morte
     def kill(self) -> None:
         self.alive        = False
         self.trail.active = False
         self.drawing      = False
         self.death_timer  = 0.8
 
-    # ── Renderização ───────────────────────────────────────────────────────────
-
+    # Renderização
     def draw(self, surface: pygame.Surface,
              camera_offset: Tuple[float, float]) -> None:
         ox, oy = camera_offset

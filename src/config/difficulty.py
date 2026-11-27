@@ -54,13 +54,12 @@ class DifficultyProfile:
     priority_types:      List[str] = field(default_factory=list)
 
 
-# ---------------------------------------------------------------------------
+#
 # Perfis de dificuldade
-# ---------------------------------------------------------------------------
-
+#
 DIFFICULTIES: dict[str, DifficultyProfile] = {
 
-    # ── Fácil ────────────────────────────────────────────────────────────────
+    # Fácil
     # O bot prioriza expansão simples, retorna cedo ao território,
     # raramente persegue e tem baixa frequência de reavaliação.
     # Adequado para jogadores iniciantes aprenderem as mecânicas.
@@ -78,7 +77,7 @@ DIFFICULTIES: dict[str, DifficultyProfile] = {
         priority_types      = ["SHIELD", "SPEED", "SIZE_UP", "BOMB", "EAGLE"],
     ),
 
-    # ── Médio ─────────────────────────────────────────────────────────────────
+    # Médio
     # Equilíbrio entre expansão e agressividade.
     # Avalia oportunidades e riscos de forma razoável.
     # Dificuldade padrão da partida.
@@ -96,7 +95,7 @@ DIFFICULTIES: dict[str, DifficultyProfile] = {
         priority_types      = ["BOMB", "SPEED", "SIZE_UP", "SHIELD", "EAGLE"],
     ),
 
-    # ── Difícil ───────────────────────────────────────────────────────────────
+    # Difícil
     # Alta frequência de reavaliação, maior alcance de detecção,
     # interceptação agressiva e uso estratégico de power-ups.
     # Desafiador para jogadores experientes.

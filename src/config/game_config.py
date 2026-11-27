@@ -1,30 +1,32 @@
-# Responsabilidade:
-# Centralizar todas as constantes e configurações do jogo.
-# Substitui src/constants.py com organização por domínio.
-# Não contém lógica; apenas valores configuráveis.
+# Constantes e configuracoes do jogo.
 
-# ── Janela ────────────────────────────────────────────────────────────────────
+# Janela
 SCREEN_WIDTH  = 1280
 SCREEN_HEIGHT = 720
 FPS           = 60
-WINDOW_TITLE  = "TerritórIO — Edição Brasil"
+WINDOW_TITLE  = "PAPERWORLDS"
 
-# ── Mundo ─────────────────────────────────────────────────────────────────────
-CELL_SIZE   = 6
-WORLD_COLS  = 240
-WORLD_ROWS  = 240
-WORLD_WIDTH  = WORLD_COLS * CELL_SIZE   # 1440 px
-WORLD_HEIGHT = WORLD_ROWS * CELL_SIZE   # 1440 px
+# Mundo (4x a area original: 240 -> 480 celulas por eixo)
+CELL_SIZE    = 6
+WORLD_COLS   = 480
+WORLD_ROWS   = 480
+WORLD_WIDTH  = WORLD_COLS * CELL_SIZE   # 2880 px
+WORLD_HEIGHT = WORLD_ROWS * CELL_SIZE   # 2880 px
 
-# ── Jogador ───────────────────────────────────────────────────────────────────
-PLAYER_SPEED    = 155.0
-PLAYER_RADIUS   = 9
-TRAIL_WIDTH     = 5
+# Jogador
+PLAYER_SPEED      = 155.0
+PLAYER_RADIUS     = 9
+TRAIL_WIDTH       = 5
 TRAIL_SAMPLE_DIST = 3.5
 MIN_CLAIM_POINTS  = 10
 CLOSE_THRESHOLD   = 22.0
 
-# ── Bots ──────────────────────────────────────────────────────────────────────
+# Ressurreicao: raio minimo de celulas livres (sem tinta) para renascer.
+# O disco inteiro precisa estar jogavel e sem dono.
+RESPAWN_CLEAR_RADIUS_CELLS = 4
+RESPAWN_SEED_RADIUS_CELLS  = 4
+
+# Bots
 BOT_SPEED_BASE  = 125.0
 NUM_BOTS        = 8
 AI_THINK_MIN    = 0.18
@@ -38,31 +40,31 @@ BOT_NAMES = [
     "Apex", "Rune",  "Flux",   "Spark", "Orbit", "Cipher",
 ]
 
-# ── Colisão ───────────────────────────────────────────────────────────────────
+# Colisao
 KILL_RADIUS          = PLAYER_RADIUS + 2
 SELF_IMMUNITY_POINTS = 22
 MIN_SELF_TRAIL       = 24
 
-# ── Câmera ────────────────────────────────────────────────────────────────────
+# Camera
 CAMERA_LERP = 0.15
 
-# ── Cores base ────────────────────────────────────────────────────────────────
-BG_COLOR    = (28,  32,  38)
-GRID_COLOR  = (38,  42,  50)
-WHITE       = (255, 255, 255)
-BLACK       = (0,   0,   0)
-YELLOW      = (255, 220, 50)
-RED         = (255, 70,  70)
-GREEN       = (80,  220, 120)
+# Cores
+BG_COLOR   = (28,  32,  38)
+GRID_COLOR = (38,  42,  50)
+WHITE      = (255, 255, 255)
+BLACK      = (0,   0,   0)
+YELLOW     = (255, 220, 50)
+RED        = (255, 70,  70)
+GREEN      = (80,  220, 120)
 
-# ── Direções ──────────────────────────────────────────────────────────────────
+# Direcoes
 DIR_UP    = (0, -1)
 DIR_DOWN  = (0,  1)
 DIR_LEFT  = (-1, 0)
 DIR_RIGHT = (1,  0)
 DIRECTIONS = [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
 
-# ── Skins disponíveis ─────────────────────────────────────────────────────────
+# Skins
 SKINS = [
     {"id": 0, "name": "Azure",   "primary": (70,  170, 255), "secondary": (40,  100, 180), "accent": (200, 230, 255)},
     {"id": 1, "name": "Crimson", "primary": (255, 70,  70),  "secondary": (180, 30,  30),  "accent": (255, 200, 200)},
@@ -76,5 +78,5 @@ SKINS = [
     {"id": 9, "name": "Lime",    "primary": (160, 255, 50),  "secondary": (90,  160, 20),  "accent": (220, 255, 180)},
 ]
 
-# ── Persistência ──────────────────────────────────────────────────────────────
+# Persistencia
 SAVE_FILE = "territorio_save.json"

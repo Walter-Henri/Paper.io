@@ -29,7 +29,6 @@ from src.config.game_config import (
     AI_DANGER_RANGE, AI_HUNT_RANGE,
     BOT_SPEED_BASE, CELL_SIZE,
     DIRECTIONS, PLAYER_RADIUS, TRAIL_WIDTH,
-    WORLD_HEIGHT, WORLD_WIDTH,
 )
 from src.entities.player import Entity
 from src.systems.sprite_manager import sprite_manager
@@ -108,19 +107,17 @@ class Bot(Entity):
         self._pu_target: Optional[Any] = None
         self.bot_effects: dict = {}     # efeitos de power-up ativos
 
-    # -----------------------------------------------------------------------
+    #
     # Propriedade de perfil
-    # -----------------------------------------------------------------------
-
+    #
     @property
     def profile(self) -> DifficultyProfile:
         """Perfil de dificuldade imutável associado a este bot."""
         return self._profile
 
-    # -----------------------------------------------------------------------
+    #
     # Ciclo de IA principal
-    # -----------------------------------------------------------------------
-
+    #
     def update_ai(
         self,
         dt: float,
@@ -164,20 +161,20 @@ class Bot(Entity):
         trail_len = len(self.trail.points)
         own       = world.is_own_territory(self.x, self.y, self.id)
 
-        # ── Prioridade 1: Evade (sobrevivência) ──────────────────────────────
+        # Prioridade 1: Evade (sobrevivência)
         if self._assess_danger(entities) and trail_len > 6:
             self.state = "evade"
             self._do_evade(world, entities)
             return
 
-        # ── Prioridade 2: Return (trilha longa) ──────────────────────────────
+        # Prioridade 2: Return (trilha longa)
         max_trail = int(16 + 32 * self._profile.max_trail_factor)
         if not own and trail_len > max_trail:
             self.state = "return"
             self._do_return(world)
             return
 
-        # ── Prioridade 3: Collect power-up ───────────────────────────────────
+        # Prioridade 3: Collect power-up
         if powerup_items:
             best_pu = self._best_powerup(powerup_items, entities)
             if best_pu is not None:
@@ -187,7 +184,7 @@ class Bot(Entity):
                 return
         self._pu_target = None
 
-        # ── Prioridade 4: Intercept ───────────────────────────────────────────
+        # Prioridade 4: Intercept
         if random.random() < self._profile.intercept_prob:
             pt = self._find_intercept(entities)
             if pt is not None:
@@ -195,7 +192,7 @@ class Bot(Entity):
                 self._steer_to(*pt)
                 return
 
-        # ── Prioridade 5: Hunt ────────────────────────────────────────────────
+        # Prioridade 5: Hunt
         if random.random() < self._profile.hunt_prob:
             pt = self._find_hunt_target(entities)
             if pt is not None:
@@ -203,14 +200,13 @@ class Bot(Entity):
                 self._steer_to(*pt)
                 return
 
-        # ── Prioridade 6: Expand (padrão) ────────────────────────────────────
+        # Prioridade 6: Expand (padrão)
         self.state = "expand"
         self._do_expand(world)
 
-    # -----------------------------------------------------------------------
+    #
     # Comportamentos por estado
-    # -----------------------------------------------------------------------
-
+    #
     def _do_expand(self, world) -> None:
         """
         Captura território de forma estratégica.
@@ -258,10 +254,9 @@ class Bot(Entity):
         elif threat_dir:
             self.set_direction(*threat_dir)
 
-    # -----------------------------------------------------------------------
+    #
     # Avaliação de power-ups
-    # -----------------------------------------------------------------------
-
+    #
     def _best_powerup(
         self, items: List, entities: List[Entity]
     ) -> Optional[Any]:
@@ -316,10 +311,9 @@ class Bot(Entity):
 
         return best_item
 
-    # -----------------------------------------------------------------------
+    #
     # Busca de alvos
-    # -----------------------------------------------------------------------
-
+    #
     def _find_hunt_target(
         self, entities: List[Entity]
     ) -> Optional[Tuple[float, float]]:
@@ -391,10 +385,9 @@ class Bot(Entity):
 
         return best_pt if best_score > 0.0 else None
 
-    # -----------------------------------------------------------------------
+    #
     # Avaliação de perigo
-    # -----------------------------------------------------------------------
-
+    #
     def _assess_danger(self, entities: List[Entity]) -> bool:
         """
         Verifica se algum inimigo está dentro do raio de perigo da trilha.
@@ -440,10 +433,9 @@ class Bot(Entity):
         return (1 if dx > 0 else -1, 0) if abs(dx) >= abs(dy) \
             else (0, 1 if dy > 0 else -1)
 
-    # -----------------------------------------------------------------------
+    #
     # Navegação
-    # -----------------------------------------------------------------------
-
+    #
     def _steer_to(self, tx: float, ty: float) -> None:
         """
         Define a melhor direção em 90° para alcançar o ponto (tx, ty).
@@ -459,7 +451,7 @@ class Bot(Entity):
         nx, ny   = dx / length, dy / length
         candidates = [
             d for d in DIRECTIONS
-            if d != (-self.direction[0], -self.direction[1])
+            if True
         ]
         best_dir = max(candidates, key=lambda d: d[0] * nx + d[1] * ny)
         self.set_direction(*best_dir)
@@ -480,7 +472,7 @@ class Bot(Entity):
         """
         candidates = [
             d for d in DIRECTIONS
-            if d != (-self.direction[0], -self.direction[1])
+            if True
         ]
         scored = []
         for d in candidates:
@@ -520,7 +512,7 @@ class Bot(Entity):
         """
         candidates = [
             d for d in DIRECTIONS
-            if d != (-self.direction[0], -self.direction[1])
+            if True
         ]
         best_dir, best_steps = None, lookahead + 1
         step_size = CELL_SIZE * 2
@@ -560,15 +552,14 @@ class Bot(Entity):
                 return
         candidates = [
             d for d in DIRECTIONS
-            if d != (-self.direction[0], -self.direction[1])
+            if True
         ]
         self.set_direction(*random.choice(candidates))
         logger.debug("Bot '%s' anti-stuck ativado.", self.name)
 
-    # -----------------------------------------------------------------------
+    #
     # Alias para trilha (usado em avaliações internas)
-    # -----------------------------------------------------------------------
-
+    #
     @property
     def trail_set(self) -> set:
         """Conjunto de células (cx, cy) da trilha atual."""
@@ -577,10 +568,9 @@ class Bot(Entity):
             for p in self.trail.points
         }
 
-    # -----------------------------------------------------------------------
+    #
     # Renderização
-    # -----------------------------------------------------------------------
-
+    #
     def draw(self, surface: pygame.Surface,
              camera_offset: Tuple[float, float]) -> None:
         """

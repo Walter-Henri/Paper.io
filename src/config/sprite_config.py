@@ -19,7 +19,7 @@
 
 SPRITE_CONFIG: dict = {
 
-    # ── Jogador ───────────────────────────────────────────────────────────────
+    # Jogador
     "player.default": {
         "path":    None,          # fallback: círculo procedural colorido
         "scale":   1.0,
@@ -41,7 +41,7 @@ SPRITE_CONFIG: dict = {
         "loop":    True,
     },
 
-    # ── Bots ──────────────────────────────────────────────────────────────────
+    # Bots
     "bot.default": {
         "path":    None,          # fallback: círculo procedural colorido
         "scale":   1.0,
@@ -53,7 +53,7 @@ SPRITE_CONFIG: dict = {
         "loop":    False,
     },
 
-    # ── Power-ups ─────────────────────────────────────────────────────────────
+    # Power-ups
     "powerup.size_up": {
         "path":    "assets/sprites/powerups/size_up.png",
         "scale":   1.0,
@@ -105,7 +105,7 @@ SPRITE_CONFIG: dict = {
         "loop":    False,
     },
 
-    # ── Efeitos ───────────────────────────────────────────────────────────────
+    # Efeitos
     "effect.explosion": {
         "path":    None,          # fallback: círculo procedural animado
         "scale":   1.0,
@@ -127,7 +127,7 @@ SPRITE_CONFIG: dict = {
         "loop":    False,
     },
 
-    # ── Interface ─────────────────────────────────────────────────────────────
+    # Interface
     "ui.predator_badge": {
         "path":    None,          # fallback: texto renderizado
         "scale":   1.0,
@@ -189,7 +189,7 @@ SPRITE_CONFIG: dict = {
         "loop":    False,
     },
 
-    # ── Fundos ────────────────────────────────────────────────────────────────
+    # Fundos
     "bg.menu": {
         "path":    None,          # fallback: gradiente procedural
         "scale":   1.0,
@@ -212,7 +212,7 @@ SPRITE_CONFIG: dict = {
     },
 }
 
-# ── Mapeamento de animações ────────────────────────────────────────────────────
+# Mapeamento de animações
 # Estrutura preparada para futuras animações por spritesheet ou sequência.
 # Cada entrada define o conjunto de quadros de um estado de animação.
 ANIMATION_CONFIG: dict = {

@@ -18,8 +18,7 @@ class HUD:
     def __init__(self, assets):
         self.assets = assets
 
-    # ── Entrada principal ─────────────────────────────────────────────────────
-
+    # Entrada principal
     def draw(self, surface: pygame.Surface,
              session,          # GameSession
              paused: bool = False) -> None:
@@ -38,8 +37,7 @@ class HUD:
         if paused:
             self._draw_pause(surface)
 
-    # ── Barra superior ────────────────────────────────────────────────────────
-
+    # Barra superior
     def _draw_top_bar(self, surface: pygame.Surface, session) -> None:
         bar = pygame.Surface((SCREEN_WIDTH, 50), pygame.SRCALPHA)
         bar.fill((10, 12, 20, 220))
@@ -60,8 +58,7 @@ class HUD:
         surface.blit(font_s.render(f"Eliminações: {player.kills}", True, YELLOW),
                      (SCREEN_WIDTH//2 + 60, 14))
 
-    # ── Ranking lateral ───────────────────────────────────────────────────────
-
+    # Ranking lateral
     def _draw_ranking(self, surface: pygame.Surface, session) -> None:
         ranked = sorted(
             [e for e in session.entities if e.alive],
@@ -100,8 +97,7 @@ class HUD:
             pct = font_xs.render(f"{e.score_percent:.1f}%", True, (100,210,255))
             surface.blit(pct, (px + panel_w - pct.get_width() - 8, ry))
 
-    # ── Painel de power-ups ───────────────────────────────────────────────────
-
+    # Painel de power-ups
     def _draw_powerup_panel(self, surface: pygame.Surface,
                              session) -> None:
         pu  = session.pu_manager
@@ -109,8 +105,7 @@ class HUD:
         fxs = self.assets.font("tiny")
         pu.draw_hud(surface, fsm, fxs, SCREEN_WIDTH, SCREEN_HEIGHT)
 
-    # ── Badge estado / nível ──────────────────────────────────────────────────
-
+    # Badge estado / nível
     def _draw_state_badge(self, surface: pygame.Surface,
                            session) -> None:
         font = self.assets.font("small")
@@ -122,8 +117,7 @@ class HUD:
         surface.blit(bg,  (8, 56))
         surface.blit(txt, (15, 60))
 
-    # ── Badge Predador ────────────────────────────────────────────────────────
-
+    # Badge Predador
     def _draw_predator_badge(self, surface: pygame.Surface) -> None:
         t    = pygame.time.get_ticks() / 380.0
         rc   = int(190 + 65 * (math.sin(t) * 0.5 + 0.5))
@@ -150,8 +144,7 @@ class HUD:
         surface.blit(bg,    (bx - 12, 6))
         surface.blit(badge, (bx, 12))
 
-    # ── Minimapa Predador (aprimorado) ────────────────────────────────────────
-
+    # Minimapa Predador (aprimorado)
     def _draw_minimap(self, surface: pygame.Surface, session) -> None:
         mm   = 150
         mm_x = SCREEN_WIDTH  - mm - 12
@@ -306,8 +299,7 @@ class HUD:
             if y_off > py + mm - 10:
                 break
 
-    # ── Alertas e indicadores ─────────────────────────────────────────────────
-
+    # Alertas e indicadores
     def _draw_danger(self, surface: pygame.Surface) -> None:
         t     = pygame.time.get_ticks() / 300.0
         alpha = int(180 + 75 * (math.sin(t) * 0.5 + 0.5))
@@ -328,8 +320,7 @@ class HUD:
                          border.get_rect(), 6, border_radius=4)
         surface.blit(border, (0, 0))
 
-    # ── Notificações ──────────────────────────────────────────────────────────
-
+    # Notificações
     def _draw_notifications(self, surface: pygame.Surface,
                              notifications: list) -> None:
         font = self.assets.font("body")
@@ -346,12 +337,13 @@ class HUD:
             surf.set_alpha(alpha)
             surface.blit(surf, (x, y))
 
-    # ── Pausa ─────────────────────────────────────────────────────────────────
-
+    # Pausa
     def _draw_pause(self, surface: pygame.Surface) -> None:
         overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         overlay.fill((0,0,0,160))
         surface.blit(overlay, (0,0))
         font = self.assets.font("title_sm")
+        brand = self.assets.font("small").render("PAPERWORLDS", True, (180, 210, 255))
+        surface.blit(brand, brand.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 48)))
         txt  = font.render("PAUSADO  —  P para continuar", True, (255,220,50))
         surface.blit(txt, txt.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2)))

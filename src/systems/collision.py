@@ -88,7 +88,7 @@ def check_collisions(
             if not trail_owner.alive or not trail_owner.trail.active:
                 continue
 
-            # ── REGRA 1: autocolisão ignorada para todos ──────────────────
+            # REGRA 1: autocolisão ignorada para todos
             if trail_owner is head:
                 continue
 
@@ -108,7 +108,7 @@ def check_collisions(
             if not hit:
                 continue
 
-            # ── REGRA 2: escudo protege o jogador ────────────────────────
+            # REGRA 2: escudo protege o jogador
             if head is player_entity and shield_active:
                 break   # protegido — ignora todos os hits desta iteração
 

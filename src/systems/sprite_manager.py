@@ -39,10 +39,9 @@ _JSON_CONFIG = _ROOT / "assets" / "data" / "sprites.json"
 from src.config.sprite_config import SPRITE_CONFIG as _FALLBACK_CONFIG
 
 
-# ---------------------------------------------------------------------------
+#
 # AnimationState
-# ---------------------------------------------------------------------------
-
+#
 class AnimationState:
     """
     Controla a reprodução de uma animação com múltiplos quadros.
@@ -66,8 +65,7 @@ class AnimationState:
         self._index   = 0
         self.finished = False
 
-    # ------------------------------------------------------------------
-
+    #
     def update(self, dt: float) -> None:
         """
         Avança a animação.
@@ -102,10 +100,9 @@ class AnimationState:
         return self.frames[self._index]
 
 
-# ---------------------------------------------------------------------------
+#
 # SpriteManager
-# ---------------------------------------------------------------------------
-
+#
 class SpriteManager:
     """
     Gerenciador centralizado de sprites.
@@ -128,10 +125,9 @@ class SpriteManager:
         self._fallback: Optional[pygame.Surface] = None
         self._config_loaded = False
 
-    # ------------------------------------------------------------------
+    #
     # Carregamento de configuração
-    # ------------------------------------------------------------------
-
+    #
     def load_config(self) -> None:
         """
         Lê assets/data/sprites.json e mescla com o fallback interno.
@@ -167,10 +163,9 @@ class SpriteManager:
         self._config        = config
         self._config_loaded = True
 
-    # ------------------------------------------------------------------
+    #
     # Fallback visual
-    # ------------------------------------------------------------------
-
+    #
     def _get_fallback(self) -> pygame.Surface:
         """
         Retorna Surface de fallback: círculo cinza semitransparente 28×28.
@@ -183,10 +178,9 @@ class SpriteManager:
             self._fallback = s
         return self._fallback
 
-    # ------------------------------------------------------------------
+    #
     # Carregamento de arquivo
-    # ------------------------------------------------------------------
-
+    #
     def _load_surface(self, path: str,
                       cfg: dict) -> Optional[pygame.Surface]:
         """
@@ -231,10 +225,9 @@ class SpriteManager:
             logger.warning("SpriteManager: erro ao carregar %s — %s", path, exc)
             return None
 
-    # ------------------------------------------------------------------
+    #
     # API pública principal
-    # ------------------------------------------------------------------
-
+    #
     def get(self, key: str) -> pygame.Surface:
         """
         Retorna o sprite correspondente à chave.
@@ -329,10 +322,9 @@ class SpriteManager:
 
         return AnimationState(frames, fps, loop)
 
-    # ------------------------------------------------------------------
+    #
     # Utilitários
-    # ------------------------------------------------------------------
-
+    #
     def preload(self, keys: List[str]) -> None:
         """
         Pré-carrega uma lista de sprites em cache.
@@ -389,7 +381,7 @@ class SpriteManager:
         return sorted(self._config.keys())
 
 
-# ---------------------------------------------------------------------------
+#
 # Instância global — importar e usar diretamente em qualquer módulo
-# ---------------------------------------------------------------------------
+#
 sprite_manager = SpriteManager()

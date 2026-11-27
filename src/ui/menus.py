@@ -13,8 +13,7 @@ from src.config.game_config import (
 )
 
 
-# ── Botão reutilizável ────────────────────────────────────────────────────────
-
+# Botão reutilizável
 class Button:
     def __init__(self, rect: pygame.Rect, text: str,
                  color=(60, 120, 220), font=None):
@@ -48,8 +47,7 @@ class Button:
                 self.rect.collidepoint(event.pos))
 
 
-# ── Menu Principal ────────────────────────────────────────────────────────────
-
+# Menu Principal
 class MainMenu:
     def __init__(self, assets):
         self.assets     = assets
@@ -127,13 +125,13 @@ class MainMenu:
         t  = math.sin(self._pulse)*0.5+0.5
         tc = (int(60+180*t), int(130+80*(1-t)), int(220+35*t))
         font_title = self.assets.font("title")
-        title  = font_title.render("TerritórIO", True, tc)
-        shadow = font_title.render("TerritórIO", True, (20,15,5))
+        title  = font_title.render("PAPERWORLDS", True, tc)
+        shadow = font_title.render("PAPERWORLDS", True, (20,15,5))
         tr = title.get_rect(center=(SCREEN_WIDTH//2, 148))
         surface.blit(shadow, (tr.x+3, tr.y+3))
         surface.blit(title,  tr)
         sub = self.assets.font("small").render(
-            "Edição Brasil  ·  Python  ·  Pygame  ·  27 estados",
+            "Estados do Brasil  ·  Python  ·  Pygame  ·  27 mapas",
             True, (145,158,185))
         surface.blit(sub, sub.get_rect(center=(SCREEN_WIDTH//2, 215)))
         self._btn_rects = []
@@ -178,6 +176,7 @@ class MainMenu:
             ("Saia do território para traçar uma trilha",False,WHITE),
             ("Feche o loop para conquistar a área",False,WHITE),
             ("Corte a trilha inimiga para eliminá-los",False,WHITE),
+            ("O território do eliminado passa para quem cortou",False,WHITE),
             ("NÃO deixe ninguém cortar SUA trilha",False,(255,120,80)),
             ("",False,WHITE),
             ("Power-ups coletáveis:",True,(200,200,255)),
@@ -201,8 +200,7 @@ class MainMenu:
             y += 34 if big else 26
 
 
-# ── Seleção de Skin ───────────────────────────────────────────────────────────
-
+# Seleção de Skin
 class SkinSelect:
     def __init__(self, assets):
         self.assets      = assets
@@ -291,8 +289,7 @@ class SkinSelect:
         surface.blit(hint,hint.get_rect(center=(SCREEN_WIDTH//2,SCREEN_HEIGHT-30)))
 
 
-# ── Game Over / Vitória ───────────────────────────────────────────────────────
-
+# Game Over / Vitória
 class GameOverScreen:
     def __init__(self, assets):
         self.assets      = assets
@@ -351,7 +348,9 @@ class GameOverScreen:
         else:
             title=self.assets.font("title").render("ELIMINADO!",True,(255,70,70))
             sub  =self.assets.font("body").render("Sua trilha foi cortada.",True,(200,150,150))
-        surface.blit(title,title.get_rect(center=(SCREEN_WIDTH//2,130)))
+        brand = self.assets.font("small").render("PAPERWORLDS", True, (180, 200, 230))
+        surface.blit(brand, brand.get_rect(center=(SCREEN_WIDTH//2, 72)))
+        surface.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 130)))
         surface.blit(sub,  sub.get_rect(center=(SCREEN_WIDTH//2,200)))
         s1=self.assets.font("body").render(f"Território: {self.score:.1f}%",True,YELLOW)
         s2=self.assets.font("body").render(f"Eliminações: {self.kills}",True,WHITE)

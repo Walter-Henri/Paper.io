@@ -11,7 +11,7 @@ from typing import List, Dict, Optional, Callable
 
 from src.systems.sprite_manager import sprite_manager
 
-# ── Identificadores de tipo ───────────────────────────────────────────────────
+# Identificadores de tipo
 PU_SIZE_UP = "SIZE_UP"
 PU_SPEED   = "SPEED"
 PU_BOMB    = "BOMB"
@@ -31,8 +31,7 @@ MAX_ITEMS      = 6
 ITEM_RADIUS    = 14
 
 
-# ── Item coletável ─────────────────────────────────────────────────────────────
-
+# Item coletável
 class PowerUpItem:
     def __init__(self, kind: str, x: float, y: float):
         self.kind   = kind
@@ -96,8 +95,7 @@ class PowerUpItem:
         return pts
 
 
-# ── Efeito ativo ───────────────────────────────────────────────────────────────
-
+# Efeito ativo
 class ActiveEffect:
     def __init__(self, kind: str, duration: float):
         self.kind     = kind
@@ -127,8 +125,7 @@ class ActiveEffect:
         return max(0.0, self.duration - self.elapsed)
 
 
-# ── Partícula auxiliar interna ─────────────────────────────────────────────────
-
+# Partícula auxiliar interna
 class _PUParticle:
     __slots__ = ("x","y","vx","vy","life","max_life","color","size","gravity")
 
@@ -154,8 +151,7 @@ class _PUParticle:
                            (int(self.x - ox), int(self.y - oy)), r)
 
 
-# ── Gerenciador principal ──────────────────────────────────────────────────────
-
+# Gerenciador principal
 class PowerUpManager:
     """
     Controla ciclo de vida completo dos power-ups:
@@ -173,8 +169,7 @@ class PowerUpManager:
         self._edge_linger    = 0.0
         self.edge_boost_on   = False
 
-    # ── Spawn ──────────────────────────────────────────────────────────────────
-
+    # Spawn
     def _try_spawn(self) -> None:
         if len(self.items) >= MAX_ITEMS:
             return
@@ -184,8 +179,7 @@ class PowerUpManager:
         y    = random.uniform(margin, self.wh - margin)
         self.items.append(PowerUpItem(kind, x, y))
 
-    # ── Update ─────────────────────────────────────────────────────────────────
-
+    # Update
     def update(self, dt: float,
                player_x: float, player_y: float,
                player_radius: float,
@@ -322,8 +316,7 @@ class PowerUpManager:
                 if k == PU_SPEED:
                     bot.speed = BOT_SPEED_BASE * (0.80 + 0.30 * bot.difficulty)
 
-    # ── Propriedades de modificadores ──────────────────────────────────────────
-
+    # Propriedades de modificadores
     def has(self, kind: str) -> bool:
         return kind in self.active
 
@@ -348,8 +341,7 @@ class PowerUpManager:
     def eagle_active(self) -> bool:
         return self.has(PU_EAGLE)
 
-    # ── Renderização no mundo ──────────────────────────────────────────────────
-
+    # Renderização no mundo
     def draw_world(self, surface: pygame.Surface,
                    ox: float, oy: float) -> None:
         # Animações de explosão da bomba
@@ -372,8 +364,7 @@ class PowerUpManager:
         for item in self.items:
             item.draw(surface, ox, oy)
 
-    # ── Painel HUD de efeitos ativos ───────────────────────────────────────────
-
+    # Painel HUD de efeitos ativos
     def draw_hud(self, surface: pygame.Surface,
                  font_sm: pygame.font.Font,
                  font_xs: pygame.font.Font,

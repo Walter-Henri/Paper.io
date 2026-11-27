@@ -1,7 +1,3 @@
-# Responsabilidade:
-# Ponto de entrada do jogo. Inicializa pygame, cria sistemas compartilhados,
-# executa o loop principal travado em 60 FPS e gerencia a máquina de estados.
-# O evento QUIT (botão X da janela, Alt+F4, etc.) encerra o processo completamente.
 
 from __future__ import annotations
 import sys
@@ -27,18 +23,17 @@ from src.ui.hud                 import HUD
 from src.ui.menus               import MainMenu, SkinSelect, GameOverScreen
 
 
-# ── Estados ───────────────────────────────────────────────────────────────────
+# Estados
 STATE_MENU     = "menu"
 STATE_SELECT   = "select"
 STATE_PLAYING  = "playing"
 STATE_GAMEOVER = "gameover"
 
-TARGET_DT = 1.0 / FPS       # 0.01666… s por frame
-MAX_DT    = TARGET_DT * 3   # limita spike de lag (ex.: alt-tab) a 3 frames
+TARGET_DT = 1.0 / FPS       # 1/60 s — passo fixo da simulação
+MAX_DT    = TARGET_DT * 5   # acumula no máximo ~5 frames de lag
 
 
-# ── Persistência ──────────────────────────────────────────────────────────────
-
+# Persistência
 def _load_save() -> dict:
     try:
         if os.path.isfile(SAVE_FILE):
@@ -57,8 +52,7 @@ def _write_save(data: dict) -> None:
         pass
 
 
-# ── Encerramento seguro ────────────────────────────────────────────────────────
-
+# Encerramento seguro
 def _quit() -> None:
     """Encerra pygame e o processo completamente (garante saída pelo X da janela)."""
     pygame.mixer.quit()
@@ -66,8 +60,7 @@ def _quit() -> None:
     sys.exit(0)
 
 
-# ── Loop principal ─────────────────────────────────────────────────────────────
-
+# Loop principal
 def main() -> None:
     pygame.init()
 
@@ -118,19 +111,19 @@ def main() -> None:
     # FPS display — atualiza o título a cada 1 segundo
     _fps_timer  = 0.0
     _fps_display = 0
+    # Acumulador de timestep fixo: a lógica roda sempre a 60 Hz,
+    # independentemente de flutuações do display.
+    _sim_acc = 0.0
 
     running = True
     while running:
 
-        # ── Controle de FPS ───────────────────────────────────────────────────
-        # tick_busy_loop usa busy-wait e garante precisão sub-ms;
-        # tick() é suficiente para a maioria dos sistemas mas pode variar ±1ms.
-        raw_dt = clock.tick_busy_loop(FPS) / 1000.0
+        # Trava em 60 FPS
+        # tick limita o render; a simulação usa passo fixo TARGET_DT.
+        frame_dt = clock.tick(FPS) / 1000.0
+        _sim_acc += min(frame_dt, MAX_DT)
 
-        # Clamp: evita dt gigante após pause/alt-tab; nunca deixa dt = 0
-        dt = max(1e-4, min(raw_dt, MAX_DT))
-
-        # ── Eventos ───────────────────────────────────────────────────────────
+        # Eventos
         for event in pygame.event.get():
 
             # X da janela, Alt+F4, Ctrl+W, sinal de fechamento do SO
@@ -156,7 +149,7 @@ def main() -> None:
                     })
                     _quit()
 
-            # ── Menu principal ────────────────────────────────────────────────
+            # Menu principal
             if state == STATE_MENU:
                 action = main_menu.handle_event(event)
                 if action == "play":
@@ -170,7 +163,7 @@ def main() -> None:
                     })
                     _quit()
 
-            # ── Seleção de skin ───────────────────────────────────────────────
+            # Seleção de skin
             elif state == STATE_SELECT:
                 action = skin_select.handle_event(event)
                 if action == "confirm":
@@ -183,7 +176,7 @@ def main() -> None:
                     audio.play("click")
                     state = STATE_MENU
 
-            # ── Partida ───────────────────────────────────────────────────────
+            # Partida
             elif state == STATE_PLAYING:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_p:
@@ -191,7 +184,7 @@ def main() -> None:
                     elif event.key == pygame.K_ESCAPE:
                         state = STATE_MENU
 
-            # ── Game Over / Vitória ───────────────────────────────────────────
+            # Game Over / Vitória
             elif state == STATE_GAMEOVER:
                 action = gameover_scr.handle_event(event)
                 if action == "restart":
@@ -207,39 +200,44 @@ def main() -> None:
                     state   = STATE_PLAYING
                     audio.play("start")
 
-        # ── Update ────────────────────────────────────────────────────────────
-        if state == STATE_MENU:
-            main_menu.update(dt)
+        # Update com passo fixo de 1/60 s
+        while _sim_acc >= TARGET_DT:
+            _sim_acc -= TARGET_DT
+            dt = TARGET_DT
 
-        elif state == STATE_PLAYING and session:
-            if not paused:
-                keys = pygame.key.get_pressed()
-                session.update(dt, keys)
+            if state == STATE_MENU:
+                main_menu.update(dt)
 
-                if session.finished:
-                    score = session.player.score_percent
-                    if score > high_score:
-                        high_score = score
-                    if session.won:
-                        audio.play("victory")
-                        level += 1
-                    else:
-                        audio.play("death")
-                    gameover_scr.set_stats(
-                        score,
-                        session.player.kills,
-                        won=session.won,
-                        level=level,
-                        state_name=session.state_name,
-                    )
-                    _write_save({
-                        "high_score": high_score,
-                        "skin_id":    skin_select.selected,
-                        "level":      level,
-                    })
-                    state = STATE_GAMEOVER
+            elif state == STATE_PLAYING and session:
+                if not paused:
+                    keys = pygame.key.get_pressed()
+                    session.update(dt, keys)
 
-        # ── Renderização ──────────────────────────────────────────────────────
+                    if session.finished:
+                        score = session.player.score_percent
+                        if score > high_score:
+                            high_score = score
+                        if session.won:
+                            audio.play("victory")
+                            level += 1
+                        else:
+                            audio.play("death")
+                        gameover_scr.set_stats(
+                            score,
+                            session.player.kills,
+                            won=session.won,
+                            level=level,
+                            state_name=session.state_name,
+                        )
+                        _write_save({
+                            "high_score": high_score,
+                            "skin_id":    skin_select.selected,
+                            "level":      level,
+                        })
+                        state = STATE_GAMEOVER
+                        break
+
+        # Renderização (uma vez por frame, após a simulação)
         screen.fill((18, 20, 28))
 
         if state == STATE_MENU:
@@ -258,11 +256,11 @@ def main() -> None:
         # Flip — envia o frame renderizado para o display
         pygame.display.flip()
 
-        # ── Título com FPS (atualiza a cada 1 s para não sobrecarregar) ───────
-        _fps_timer += dt
+        # Título com FPS (atualiza a cada 1 s para não sobrecarregar)
+        _fps_timer += frame_dt
         if _fps_timer >= 1.0:
             _fps_timer   = 0.0
-            _fps_display = int(clock.get_fps())
+            _fps_display = int(round(clock.get_fps()))
             pygame.display.set_caption(
                 f"{WINDOW_TITLE}  |  Nível {level}"
                 f"  |  {_fps_display} FPS"
